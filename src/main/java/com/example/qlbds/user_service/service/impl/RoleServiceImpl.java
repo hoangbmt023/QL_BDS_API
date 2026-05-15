@@ -14,6 +14,7 @@ import com.example.qlbds.user_service.entity.Agent;
 import com.example.qlbds.user_service.entity.AgentRequest;
 import com.example.qlbds.user_service.entity.Owner;
 import com.example.qlbds.user_service.entity.User;
+import com.example.qlbds.user_service.mapper.RoleResponseMapper;
 import com.example.qlbds.user_service.repository.AgentRepository;
 import com.example.qlbds.user_service.repository.AgentRequestRepository;
 import com.example.qlbds.user_service.repository.OwnerRepository;
@@ -33,9 +34,11 @@ public class RoleServiceImpl implements RoleService {
     private final OwnerRepository ownerRepository;
     private final AgentRepository agentRepository;
     private final AgentRequestRepository agentRequestRepository;
+    private final RoleResponseMapper roleResponseMapper;
 
     // ==================== OWNER ====================
 
+    // Nâng cấp tài khoản thành Owner (Chủ nhà)
     @Override
     @Transactional
     public OwnerResponse becomeOwner(BecomeOwnerRequest request) {
@@ -45,7 +48,7 @@ public class RoleServiceImpl implements RoleService {
         if (ownerRepository.existsByUser(user)) {
             Owner existing = ownerRepository.findByUser(user).orElseThrow();
             log.info("User [{}] đã là Owner", user.getUsername());
-            return toOwnerResponse(existing);
+            return roleResponseMapper.toOwnerResponse(existing);
         }
 
         // Tạo Owner record
@@ -63,11 +66,12 @@ public class RoleServiceImpl implements RoleService {
         }
 
         log.info("User [{}] đã trở thành Owner", user.getUsername());
-        return toOwnerResponse(owner);
+        return roleResponseMapper.toOwnerResponse(owner);
     }
 
     // ==================== AGENT REQUEST ====================
 
+    // Gửi yêu cầu trở thành Agent (Môi giới)
     @Override
     @Transactional
     public AgentRequestResponse submitAgentRequest(BecomeAgentRequest request) {
@@ -93,19 +97,21 @@ public class RoleServiceImpl implements RoleService {
 
         agentRequestRepository.save(agentRequest);
         log.info("User [{}] đã gửi yêu cầu làm Agent", user.getUsername());
-        return toAgentRequestResponse(agentRequest);
+        return roleResponseMapper.toAgentRequestResponse(agentRequest);
     }
 
+    // Lấy danh sách yêu cầu Agent đang chờ duyệt
     @Override
     @Transactional(readOnly = true)
     public List<AgentRequestResponse> getPendingAgentRequests() {
         return agentRequestRepository
                 .findAllByStatus(AgentRequestStatus.PENDING)
                 .stream()
-                .map(this::toAgentRequestResponse)
+                .map(roleResponseMapper::toAgentRequestResponse)
                 .toList();
     }
 
+    // Admin duyệt hoặc từ chối yêu cầu làm Agent
     @Override
     @Transactional
     public AgentRequestResponse reviewAgentRequest(Long requestId, ReviewAgentRequest review) {
@@ -147,33 +153,8 @@ public class RoleServiceImpl implements RoleService {
         }
 
         agentRequestRepository.save(agentRequest);
-        return toAgentRequestResponse(agentRequest);
+        return roleResponseMapper.toAgentRequestResponse(agentRequest);
     }
 
     // ==================== Mappers ====================
-
-    private OwnerResponse toOwnerResponse(Owner owner) {
-        return new OwnerResponse(
-                owner.getId(),
-                owner.getUser().getId(),
-                owner.getUser().getUsername(),
-                owner.getUser().getFullName(),
-                owner.getAddress(),
-                owner.getDescription()
-        );
-    }
-
-    private AgentRequestResponse toAgentRequestResponse(AgentRequest r) {
-        return new AgentRequestResponse(
-                r.getId(),
-                r.getUser().getId(),
-                r.getUser().getUsername(),
-                r.getAgencyName(),
-                r.getLicenseNumber(),
-                r.getNote(),
-                r.getStatus(),
-                r.getAdminNote(),
-                r.getCreatedAt()
-        );
-    }
 }

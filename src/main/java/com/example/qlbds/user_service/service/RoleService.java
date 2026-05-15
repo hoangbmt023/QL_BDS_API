@@ -12,17 +12,15 @@ import com.example.qlbds.user_service.dto.*;
  */
 public interface RoleService {
 
-    // ==================== OWNER ====================
-    /** User tự đăng ký thành Owner. Nếu đã là Owner → trả về thông tin hiện tại. */
+    // User tự đăng ký thành Owner. Nếu đã là Owner → trả về thông tin hiện tại.
     OwnerResponse becomeOwner(BecomeOwnerRequest request);
 
-    // ==================== AGENT REQUEST ====================
-    /** User nộp yêu cầu làm Agent. Chỉ cho phép 1 request PENDING tại 1 thời điểm. */
+    // User nộp yêu cầu làm Agent. Chỉ cho phép 1 request PENDING tại 1 thời điểm.
     AgentRequestResponse submitAgentRequest(BecomeAgentRequest request);
 
-    /** Lấy danh sách tất cả request đang chờ duyệt (ADMIN). */
+    // Lấy danh sách tất cả request đang chờ duyệt (ADMIN).
     List<AgentRequestResponse> getPendingAgentRequests();
 
-    /** Admin duyệt hoặc từ chối request (ADMIN). */
+    // Admin duyệt hoặc từ chối request (ADMIN).
     AgentRequestResponse reviewAgentRequest(Long requestId, ReviewAgentRequest review);
 }

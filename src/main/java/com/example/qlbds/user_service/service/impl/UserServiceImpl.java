@@ -11,6 +11,7 @@ import com.example.qlbds.user_service.dto.ChangeUserRoleRequest;
 import com.example.qlbds.user_service.dto.UserProfileResponse;
 import com.example.qlbds.user_service.dto.UserSummaryResponse;
 import com.example.qlbds.user_service.entity.User;
+import com.example.qlbds.user_service.mapper.UserResponseMapper;
 import com.example.qlbds.user_service.repository.UserRepository;
 import com.example.qlbds.user_service.service.UserService;
 
@@ -24,26 +25,26 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final CurrentUserService currentUserService;
+    private final UserResponseMapper userResponseMapper;
 
-    // ==================== Queries ====================
-
+    // Lấy danh sách tất cả người dùng (ADMIN)
     @Override
     @Transactional(readOnly = true)
     public List<UserSummaryResponse> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(this::toUserSummaryResponse)
+                .map(userResponseMapper::toUserSummaryResponse)
                 .toList();
     }
 
+    // Lấy thông tin cá nhân của người dùng hiện tại
     @Override
     @Transactional(readOnly = true)
     public UserProfileResponse me() throws ResourceNotFoundException {
         User user = currentUserService.getCurrentUser();
-        return toUserProfileResponse(user);
+        return userResponseMapper.toUserProfileResponse(user);
     }
 
-    // ==================== Commands ====================
-
+    // Thay đổi vai trò của người dùng (ADMIN)
     @Override
     @Transactional
     public UserSummaryResponse changeRole(Long userId, ChangeUserRoleRequest request)
@@ -56,31 +57,7 @@ public class UserServiceImpl implements UserService {
         User saved = userRepository.save(user);
 
         log.info("Đã đổi role người dùng [{}] sang {}", userId, request.role());
-        return toUserSummaryResponse(saved);
+        return userResponseMapper.toUserSummaryResponse(saved);
     }
 
-    // ==================== Mappers ====================
-
-    private UserSummaryResponse toUserSummaryResponse(User user) {
-        return new UserSummaryResponse(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFullName(),
-                user.getRole(),
-                user.getIsActive()
-        );
-    }
-
-    private UserProfileResponse toUserProfileResponse(User user) {
-        return new UserProfileResponse(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFullName(),
-                user.getPhone(),
-                user.getRole(),
-                user.getIsActive()
-        );
-    }
 }

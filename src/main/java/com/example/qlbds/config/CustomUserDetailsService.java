@@ -13,10 +13,7 @@ import com.example.qlbds.user_service.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
-/**
- * Load thông tin User từ database để Spring Security authenticate.
- * Role được prefix bằng "ROLE_" theo quy ước Spring Security.
- */
+// custom UserDetailsService để load user từ DB và kiểm tra trạng thái tài khoản
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {

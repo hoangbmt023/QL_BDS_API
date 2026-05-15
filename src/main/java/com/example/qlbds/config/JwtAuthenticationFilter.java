@@ -16,10 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Filter chạy 1 lần cho mỗi request.
- * Đọc Authorization header, validate JWT, và đặt Authentication vào SecurityContext.
- */
+// Filter này sẽ được Spring Security gọi trước mỗi request để kiểm tra JWT token trong header
 @Slf4j
 @Component
 @RequiredArgsConstructor
