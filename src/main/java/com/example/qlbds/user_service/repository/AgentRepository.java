@@ -11,7 +11,12 @@ import com.example.qlbds.user_service.entity.User;
 @Repository
 public interface AgentRepository extends JpaRepository<Agent, Long> {
 
+    // Tìm Agent đang active (chưa bị xóa mềm)
+    Optional<Agent> findByUserAndIsDeletedFalse(User user);
+
+    // Tìm Agent kể cả đã xóa mềm (dùng khi restore)
     Optional<Agent> findByUser(User user);
 
-    boolean existsByUser(User user);
+    // Kiểm tra user đã có Agent record đang active chưa
+    boolean existsByUserAndIsDeletedFalse(User user);
 }

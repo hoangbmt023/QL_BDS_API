@@ -109,6 +109,10 @@ public class Property {
     @JoinColumn(name = "agent_id", foreignKey = @ForeignKey(name = "fk_property_agent"))
     private Agent agent;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

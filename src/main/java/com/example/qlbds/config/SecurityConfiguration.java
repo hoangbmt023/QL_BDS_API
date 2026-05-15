@@ -66,10 +66,7 @@ public class SecurityConfiguration {
         return http.build();
     }
 
-    /**
-     * AuthenticationProvider kết nối CustomUserDetailsService với PasswordEncoder.
-     * Spring Security sẽ dùng provider này để xác thực username/password.
-     */
+    // Cấu hình AuthenticationProvider để Spring Security biết cách load user và check password
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);

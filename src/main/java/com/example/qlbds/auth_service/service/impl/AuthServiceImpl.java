@@ -17,6 +17,8 @@ import com.example.qlbds.auth_service.service.AuthService;
 import com.example.qlbds.auth_service.service.EmailService;
 import com.example.qlbds.auth_service.service.OtpGenerator;
 import com.example.qlbds.auth_service.service.OtpRateLimiter;
+import com.example.qlbds.common.exception.DuplicateResourceException;
+import com.example.qlbds.common.exception.InvalidResourceException;
 import com.example.qlbds.common.exception.ResourceNotFoundException;
 import com.example.qlbds.config.CustomUserDetailsService;
 import com.example.qlbds.config.JwtService;
@@ -42,14 +44,16 @@ public class AuthServiceImpl implements AuthService {
     private final OtpRateLimiter otpRateLimiter;
     private final OtpGenerator otpGenerator;
 
+    // Đăng ký tài khoản người dùng mới
     @Override
     @Transactional
     public void register(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.username())) {
-            throw new IllegalArgumentException("Tên đăng nhập '" + request.username() + "' đã được sử dụng");
+        if (userRepository.existsByUsernameAndIsDeletedFalse(request.username())) {
+            throw new DuplicateResourceException("Người dùng",
+                    "tên đăng nhập '" + request.username() + "' đã được sử dụng");
         }
-        if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email '" + request.email() + "' đã được đăng ký");
+        if (userRepository.existsByEmailAndIsDeletedFalse(request.email())) {
+            throw new DuplicateResourceException("Người dùng", "email '" + request.email() + "' đã được đăng ký");
         }
 
         User newUser = User.builder()
@@ -66,21 +70,26 @@ public class AuthServiceImpl implements AuthService {
         log.info("Đăng ký tài khoản thành công (đang chờ kích hoạt): {}", request.username());
     }
 
+    // Đăng nhập và tạo JWT token
     @Override
     @Transactional
     public AuthResponse login(LoginRequest request) {
         User user = findByUsername(request.username());
 
+        if (user.getIsDeleted()) {
+            throw new InvalidResourceException("Tài khoản", "Tài khoản này đã bị xóa, vui lòng liên hệ Admin để khôi phục lại.");
+        }
+
         if (user.isPending()) {
-            throw new IllegalStateException("Tài khoản chưa được kích hoạt. Vui lòng kiểm tra email.");
+            throw new InvalidResourceException("Tài khoản", "chưa được kích hoạt. Vui lòng kiểm tra email.");
         }
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new IllegalArgumentException("Mật khẩu không chính xác");
+            throw new InvalidResourceException("Mật khẩu", "không chính xác");
         }
 
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(request.username());
-        
+
         // Tạo access token
         String accessToken = jwtService.generateToken(userDetails, user.getEmail(), user.getRole().name());
 
@@ -97,22 +106,23 @@ public class AuthServiceImpl implements AuthService {
                 .token(refreshTokenString)
                 .expiryDate(Instant.now().plusSeconds(7 * 24 * 60 * 60)) // 7 days
                 .build();
-        
+
         refreshTokenRepository.save(refreshToken);
 
         log.info("Đăng nhập thành công: {}", request.username());
         return new AuthResponse(accessToken, refreshToken.getToken());
     }
 
+    // Làm mới access token bằng refresh token
     @Override
     @Transactional
     public AuthResponse refreshToken(RefreshTokenRequest request) {
         RefreshToken token = refreshTokenRepository.findByToken(request.refreshToken())
-                .orElseThrow(() -> new IllegalArgumentException("Refresh token không hợp lệ"));
+                .orElseThrow(() -> new InvalidResourceException("Refresh token", "không hợp lệ"));
 
         if (token.isExpired()) {
             refreshTokenRepository.deleteById(token.getId());
-            throw new IllegalArgumentException("Refresh token đã hết hạn, vui lòng đăng nhập lại");
+            throw new InvalidResourceException("Refresh token", "đã hết hạn, vui lòng đăng nhập lại");
         }
 
         User user = token.getUser();
@@ -122,36 +132,39 @@ public class AuthServiceImpl implements AuthService {
         return new AuthResponse(accessToken);
     }
 
+    // Thu hồi refresh token (vô hiệu hóa token cụ thể)
     @Override
     @Transactional
     public void revokeToken(RevokeTokenRequest request) {
         RefreshToken token = refreshTokenRepository.findByToken(request.refreshToken())
-                .orElseThrow(() -> new IllegalArgumentException("Refresh token không tồn tại"));
-        
+                .orElseThrow(() -> new ResourceNotFoundException("Refresh token không tồn tại"));
+
         refreshTokenRepository.deleteById(token.getId());
         log.info("Đã thu hồi refresh token của user: {}", token.getUser().getUsername());
     }
 
+    // Đăng xuất và xóa refresh token
     @Override
     @Transactional
     public void logout(LogoutRequest request) {
         RefreshToken token = refreshTokenRepository.findByToken(request.refreshToken())
-                .orElseThrow(() -> new IllegalArgumentException("Refresh token không tồn tại"));
-        
+                .orElseThrow(() -> new ResourceNotFoundException("Refresh token không tồn tại"));
+
         refreshTokenRepository.deleteById(token.getId());
         log.info("Đăng xuất thành công");
     }
 
+    // Tạo và gửi mã OTP qua email để khôi phục mật khẩu
     @Override
     public void generateAndSendForgotPasswordOtpEmail(ForgotPasswordRequest request) {
         User user = findByEmail(request.email());
 
         if (user.isPending()) {
-            throw new IllegalStateException("Tài khoản chưa được kích hoạt");
+            throw new InvalidResourceException("Tài khoản", "chưa được kích hoạt");
         }
 
         if (!otpRateLimiter.canSend(request.email())) {
-            throw new IllegalStateException("Vui lòng đợi 60 giây trước khi gửi lại OTP");
+            throw new InvalidResourceException("OTP", "vui lòng đợi 60 giây trước khi gửi lại OTP");
         }
 
         String otpCode = otpGenerator.generateOtp(6);
@@ -162,18 +175,21 @@ public class AuthServiceImpl implements AuthService {
         otpRateLimiter.recordSend(request.email());
     }
 
+    // Xác minh mã OTP khôi phục mật khẩu
     @Override
     public void verifyForgotPassword(VerifyForgotPasswordRequest request) {
-        User user = findByEmail(request.email());
+        findByEmail(request.email());
+
         Otp otp = otpRepository.get(request.email());
 
         if (otp == null) {
-            throw new IllegalArgumentException("Mã OTP không hợp lệ hoặc đã hết hạn");
+            throw new InvalidResourceException("Mã OTP", "không hợp lệ hoặc đã hết hạn");
         }
 
         otp.verify(request.otp());
     }
 
+    // Đặt lại mật khẩu mới sau khi xác minh OTP thành công
     @Override
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
@@ -181,7 +197,7 @@ public class AuthServiceImpl implements AuthService {
         Otp otp = otpRepository.get(request.email());
 
         if (otp == null) {
-            throw new IllegalArgumentException("Mã OTP không hợp lệ hoặc đã hết hạn");
+            throw new InvalidResourceException("Mã OTP", "không hợp lệ hoặc đã hết hạn");
         }
 
         otp.verify(request.otp());
@@ -195,16 +211,17 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    // Tạo và gửi mã OTP qua email để kích hoạt tài khoản
     @Override
     public void generateAndSendActivateOtpEmail(SendActivateOtpRequest request) {
         User user = findByEmail(request.email());
 
         if (!user.isPending()) {
-            throw new IllegalStateException("Tài khoản đã được kích hoạt");
+            throw new InvalidResourceException("Tài khoản", "đã được kích hoạt");
         }
 
         if (!otpRateLimiter.canSend(request.email())) {
-            throw new IllegalStateException("Vui lòng đợi 60 giây trước khi gửi lại OTP");
+            throw new InvalidResourceException("OTP", "vui lòng đợi 60 giây trước khi gửi lại OTP");
         }
 
         String otpCode = otpGenerator.generateOtp(6);
@@ -215,6 +232,7 @@ public class AuthServiceImpl implements AuthService {
         otpRateLimiter.recordSend(request.email());
     }
 
+    // Kích hoạt tài khoản bằng mã OTP
     @Override
     @Transactional
     public void activateAccount(ActivateAccountRequest request) {
@@ -222,7 +240,7 @@ public class AuthServiceImpl implements AuthService {
         Otp otp = otpRepository.get(request.email());
 
         if (otp == null) {
-            throw new IllegalArgumentException("Mã OTP không hợp lệ hoặc đã hết hạn");
+            throw new InvalidResourceException("Mã OTP", "không hợp lệ hoặc đã hết hạn");
         }
 
         otp.verify(request.otp());
@@ -233,13 +251,16 @@ public class AuthServiceImpl implements AuthService {
     }
 
     // ==================== Private function ====================
+    // Tìm kiếm người dùng theo email
     private User findByEmail(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmailAndIsDeletedFalse(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với email: " + email));
     }
 
+    // Tìm kiếm người dùng theo username
     private User findByUsername(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với username: " + username));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Không tìm thấy người dùng với username: " + username));
     }
 }

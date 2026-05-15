@@ -13,10 +13,7 @@ import com.example.qlbds.user_service.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
-/**
- * Load thông tin User từ database để Spring Security authenticate.
- * Role được prefix bằng "ROLE_" theo quy ước Spring Security.
- */
+// custom UserDetailsService để load user từ DB và kiểm tra trạng thái tài khoản
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
@@ -25,8 +22,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        User user = userRepository.findByUsernameAndIsDeletedFalse(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found or deleted: " + username));
 
         // Kiểm tra tài khoản có bị vô hiệu hóa không
         if (!user.getIsActive()) {

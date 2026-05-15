@@ -29,6 +29,7 @@ public class PropertyServiceImpl implements PropertyService {
     private final PropertyRepository propertyRepository;
     private final PropertyMapper propertyMapper;
 
+    // Tạo bất động sản mới
     @Override
     @Transactional
     public PropertyResponse create(CreatePropertyRequest request) {
@@ -44,11 +45,13 @@ public class PropertyServiceImpl implements PropertyService {
                 .address(request.address())
                 .city(request.city())
                 .district(request.district())
+                .isDeleted(false) // Mặc định chưa xóa
                 .build();
 
         return propertyMapper.toResponse(propertyRepository.save(property));
     }
 
+    // Lấy danh sách bất động sản có phân trang và tìm kiếm (đã lọc isDeleted = false)
     @Override
     public PageResponse<PropertyResponse> findAll(String search, int page, int size) {
         String term = (search != null && !search.isBlank()) ? search.strip() : null;
@@ -56,26 +59,28 @@ public class PropertyServiceImpl implements PropertyService {
         
         if (term != null) {
             return PageResponse.from(
-                    propertyRepository.findByTitleContainingIgnoreCaseAndVisibilityTrue(term, pageable)
+                    propertyRepository.findByTitleContainingIgnoreCaseAndVisibilityTrueAndIsDeletedFalse(term, pageable)
                             .map(propertyMapper::toResponse));
         } else {
             return PageResponse.from(
-                    propertyRepository.findByVisibilityTrue(pageable)
+                    propertyRepository.findByVisibilityTrueAndIsDeletedFalse(pageable)
                             .map(propertyMapper::toResponse));
         }
     }
 
+    // Lấy thông tin chi tiết bất động sản theo ID (đã lọc isDeleted = false)
     @Override
     public PropertyResponse findById(Long id) {
-        return propertyRepository.findByIdAndVisibilityTrue(id)
+        return propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(id)
                 .map(propertyMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Property", id));
     }
 
+    // Cập nhật thông tin bất động sản
     @Override
     @Transactional
     public PropertyResponse update(Long id, UpdatePropertyRequest request) {
-        Property property = propertyRepository.findByIdAndVisibilityTrue(id)
+        Property property = propertyRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property", id));
 
         property.setTitle(request.title() != null ? request.title().strip() : null);
@@ -91,17 +96,20 @@ public class PropertyServiceImpl implements PropertyService {
         return propertyMapper.toResponse(property);
     }
 
+    // Xóa tạm thời bất động sản (Soft-delete)
     @Override
     @Transactional
     public void delete(Long id) {
-        Property property = propertyRepository.findByIdAndVisibilityTrue(id)
+        Property property = propertyRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property", id));
-        property.setVisibility(false);
+        property.setIsDeleted(true);
+        log.info("[Delete Property] id={} - Đã xóa mềm", id);
     }
 
+    // Tìm thực thể Property theo ID
     @Override
     public Property findPropertyById(Long id) {
-        return propertyRepository.findByIdAndVisibilityTrue(id)
+        return propertyRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property", id));
     }
 }

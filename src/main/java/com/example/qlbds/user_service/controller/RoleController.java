@@ -22,14 +22,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * API nâng cấp vai trò người dùng.
- *
- * POST /api/roles/become-owner          → Tự trở thành Owner (không cần duyệt)
- * POST /api/roles/agent-requests        → Gửi yêu cầu làm Agent
- * GET  /api/roles/agent-requests        → Lấy danh sách PENDING (Admin)
- * PATCH /api/roles/agent-requests/{id} → Duyệt/từ chối request (Admin)
- */
 @RestController
 @RequestMapping("/api/roles")
 @RequiredArgsConstructor
@@ -39,12 +31,12 @@ public class RoleController {
 
     private final RoleService roleService;
 
-    // ==================== OWNER ====================
-
+    // Người dùng tự đăng ký thành Owner (chủ nhà / chủ bất động sản) — CHỈ USER
     @PostMapping("/become-owner")
-    @Operation(summary = "Tự đăng ký thành Owner (chủ nhà / chủ bất động sản)")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Tự đăng ký thành Owner (chỉ dành cho USER)")
     public ResponseEntity<ApiResponse<OwnerResponse>> becomeOwner(
-            @RequestBody(required = false) BecomeOwnerRequest request) {
+            @Valid @RequestBody(required = false) BecomeOwnerRequest request) {
 
         // Cho phép body rỗng
         if (request == null) {
@@ -55,10 +47,10 @@ public class RoleController {
         return ResponseEntity.ok(ApiResponse.success(response, "Đăng ký thành chủ nhà thành công"));
     }
 
-    // ==================== AGENT ====================
-
+    // Gửi yêu cầu làm Agent (môi giới) đến Admin duyệt — CHỈ USER
     @PostMapping("/agent-requests")
-    @Operation(summary = "Gửi yêu cầu trở thành môi giới (chờ Admin duyệt)")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Gửi yêu cầu trở thành môi giới (chỉ dành cho USER, chờ Admin duyệt)")
     public ResponseEntity<ApiResponse<AgentRequestResponse>> submitAgentRequest(
             @Valid @RequestBody BecomeAgentRequest request) {
 
@@ -67,6 +59,7 @@ public class RoleController {
                 ApiResponse.success(response, "Yêu cầu làm môi giới đã được gửi, vui lòng chờ Admin xem xét"));
     }
 
+    // Lấy danh sách yêu cầu làm Agent đang chờ duyệt (Admin)
     @GetMapping("/agent-requests")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Lấy danh sách yêu cầu làm Agent đang chờ duyệt (Admin)")
@@ -76,6 +69,7 @@ public class RoleController {
                 ApiResponse.success(responses, "Lấy danh sách yêu cầu thành công"));
     }
 
+    // Admin duyệt hoặc từ chối yêu cầu làm Agent
     @PatchMapping("/agent-requests/{id}/review")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Admin duyệt hoặc từ chối yêu cầu làm Agent")
@@ -85,7 +79,7 @@ public class RoleController {
 
         AgentRequestResponse response = roleService.reviewAgentRequest(id, review);
         String msg = review.approved() ? "Đã duyệt yêu cầu, người dùng đã trở thành Môi giới"
-                                       : "Đã từ chối yêu cầu";
+                : "Đã từ chối yêu cầu";
         return ResponseEntity.ok(ApiResponse.success(response, msg));
     }
 }
