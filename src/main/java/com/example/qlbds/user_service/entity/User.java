@@ -60,6 +60,10 @@ public class User {
     @Builder.Default
     private Boolean isActive = true;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -67,6 +71,12 @@ public class User {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @jakarta.persistence.OneToOne(mappedBy = "user")
+    private Agent agent;
+
+    @jakarta.persistence.OneToOne(mappedBy = "user")
+    private Owner owner;
 
     // Helper methods
     public boolean isPending() {

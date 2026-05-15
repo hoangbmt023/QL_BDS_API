@@ -13,5 +13,6 @@ public record AgentRequestResponse(
         String note,
         AgentRequestStatus status,
         String adminNote,
+        String slug, // Thêm slug của Agent (nếu đã duyệt)
         LocalDateTime createdAt
 ) {}

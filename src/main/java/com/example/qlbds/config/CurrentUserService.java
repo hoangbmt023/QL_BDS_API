@@ -4,6 +4,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.example.qlbds.common.exception.InvalidResourceException;
 import com.example.qlbds.common.exception.ResourceNotFoundException;
 import com.example.qlbds.user_service.entity.User;
 import com.example.qlbds.user_service.repository.UserRepository;
@@ -25,7 +26,7 @@ public class CurrentUserService {
 
         if (authentication == null || !authentication.isAuthenticated()
                 || "anonymousUser".equals(authentication.getPrincipal())) {
-            throw new IllegalStateException("No authenticated user found");
+            throw new InvalidResourceException("Tài khoản", "Không tìm thấy thông tin đăng nhập");
         }
 
         String username = authentication.getName();

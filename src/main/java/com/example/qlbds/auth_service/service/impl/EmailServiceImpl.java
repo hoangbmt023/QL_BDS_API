@@ -8,6 +8,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import com.example.qlbds.auth_service.service.EmailService;
+import com.example.qlbds.common.exception.InvalidResourceException;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -33,6 +34,19 @@ public class EmailServiceImpl implements EmailService {
         sendHtmlEmail(to, "Mã OTP xác thực của bạn", html);
     }
 
+    @Override
+    public void sendAgentRequestResultEmail(String to, String fullName, boolean approved, String adminNote) {
+        Context context = new Context();
+        context.setVariable("fullName", fullName);
+        context.setVariable("approved", approved);
+        context.setVariable("adminNote", adminNote);
+
+        String html = templateEngine.process("email/agent-request-result", context);
+        String subject = approved ? "Yêu cầu làm môi giới của bạn đã được DUYỆT" : "Yêu cầu làm môi giới của bạn bị TỪ CHỐI";
+
+        sendHtmlEmail(to, subject, html);
+    }
+
     private void sendHtmlEmail(String to, String subject, String html) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -46,7 +60,7 @@ public class EmailServiceImpl implements EmailService {
             log.info("Đã gửi email đến: {}", to);
         } catch (MessagingException | MailException e) {
             log.error("Lỗi khi gửi email đến {}", to, e);
-            throw new RuntimeException("Gửi email thất bại", e);
+            throw new InvalidResourceException("Email", "Gửi email thất bại đến " + to);
         }
     }
 }
