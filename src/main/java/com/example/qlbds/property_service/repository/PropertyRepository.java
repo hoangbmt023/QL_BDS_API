@@ -10,11 +10,19 @@ import com.example.qlbds.shared.entity.enums.PropertyStatus;
 
 @Repository
 public interface PropertyRepository extends JpaRepository<Property, Long> {
-    Page<Property> findByStatusAndVisibilityTrue(PropertyStatus status, Pageable pageable);
 
-    Page<Property> findByVisibilityTrue(Pageable pageable);
+    // Lấy danh sách property theo status và chưa bị xóa, đang hiển thị
+    Page<Property> findByStatusAndVisibilityTrueAndIsDeletedFalse(PropertyStatus status, Pageable pageable);
 
-    Page<Property> findByTitleContainingIgnoreCaseAndVisibilityTrue(String title, Pageable pageable);
+    // Lấy tất cả property đang hiển thị và chưa bị xóa
+    Page<Property> findByVisibilityTrueAndIsDeletedFalse(Pageable pageable);
 
-    java.util.Optional<Property> findByIdAndVisibilityTrue(Long id);
+    // Tìm kiếm theo tiêu đề và chưa bị xóa, đang hiển thị
+    Page<Property> findByTitleContainingIgnoreCaseAndVisibilityTrueAndIsDeletedFalse(String title, Pageable pageable);
+
+    // Tìm chi tiết theo ID và chưa bị xóa, đang hiển thị
+    java.util.Optional<Property> findByIdAndVisibilityTrueAndIsDeletedFalse(Long id);
+
+    // Tìm theo ID bất kể visibility nhưng phải chưa bị xóa
+    java.util.Optional<Property> findByIdAndIsDeletedFalse(Long id);
 }

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Kết quả xét duyệt yêu cầu làm Môi giới</title>
+</head>
+<body>
+    <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 600px; margin: auto;">
+        <h2 style="color: #333;">Xin chào <span th:text="${fullName}">Người dùng</span>,</h2>
+        
+        <p>Hệ thống Quản lý Bất động sản xin thông báo kết quả xét duyệt yêu cầu trở thành **Môi giới (Agent)** của bạn:</p>
+
+        <div th:if="${approved}" style="background-color: #dff0d8; border: 1px solid #d6e9c6; color: #3c763d; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            <strong>Chúc mừng!</strong> Yêu cầu của bạn đã được Admin **DUYỆT**. Hiện tại bạn đã có quyền đăng bài và quản lý bài đăng với tư cách là Môi giới.
+        </div>
+
+        <div th:unless="${approved}" style="background-color: #f2dede; border: 1px solid #ebccd1; color: #a94442; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            <strong>Thông báo:</strong> Rất tiếc, yêu cầu của bạn đã bị **TỪ CHỐI**.
+        </div>
+
+        <div th:if="${adminNote != null && !adminNote.isEmpty()}" style="margin-top: 10px;">
+            <p><strong>Ghi chú từ Admin:</strong></p>
+            <p style="font-style: italic; color: #666; border-left: 4px solid #eee; padding-left: 10px;" th:text="${adminNote}"></p>
+        </div>
+
+        <p style="margin-top: 30px;">Nếu có bất kỳ thắc mắc nào, vui lòng phản hồi lại email này.</p>
+        
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="color: #888; font-size: 12px;">Trân trọng,<br/>Đội ngũ QLBDS</p>
+    </div>
+</body>
+</html>

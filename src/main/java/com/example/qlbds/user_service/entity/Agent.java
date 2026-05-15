@@ -50,6 +50,10 @@ public class Agent {
     @Column
     private Double rating = 0.0;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

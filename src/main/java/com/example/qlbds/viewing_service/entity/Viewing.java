@@ -67,6 +67,10 @@ public class Viewing {
     @Column(columnDefinition = "TEXT")
     private String note;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

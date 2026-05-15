@@ -1,5 +1,7 @@
 package com.example.qlbds.auth_service.model;
 
+import com.example.qlbds.common.exception.InvalidResourceException;
+
 import java.time.Instant;
 
 import lombok.Getter;
@@ -20,10 +22,10 @@ public class Otp {
 
     public void verify(String inputCode) {
         if (expiryDate.isBefore(Instant.now())) {
-            throw new IllegalArgumentException("Mã OTP đã hết hạn");
+            throw new InvalidResourceException("Mã OTP", "đã hết hạn");
         }
         if (!this.code.equals(inputCode)) {
-            throw new IllegalArgumentException("Mã OTP không chính xác");
+            throw new InvalidResourceException("Mã OTP", "không chính xác");
         }
     }
 }

@@ -50,17 +50,9 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.message(ex.getMessage()));
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
-        log.warn("Dữ liệu không hợp lệ: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.message(ex.getMessage()));
-    }
-
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
-        log.warn("Trạng thái không hợp lệ: {}", ex.getMessage());
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicate(DuplicateResourceException ex) {
+        log.warn("Tài nguyên bị trùng lặp: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.message(ex.getMessage()));
@@ -69,9 +61,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException ex) {
         log.warn("Lỗi xác thực: {}", ex.getMessage());
+        String msg = ex.getMessage();
+        if (msg == null || msg.equalsIgnoreCase("Bad credentials")) {
+            msg = "Tên đăng nhập hoặc mật khẩu không chính xác.";
+        }
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ErrorResponse.message("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."));
+                .body(ErrorResponse.message(msg));
     }
 
     @ExceptionHandler(AccessDeniedException.class)

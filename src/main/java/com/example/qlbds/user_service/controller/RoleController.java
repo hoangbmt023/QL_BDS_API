@@ -31,11 +31,12 @@ public class RoleController {
 
     private final RoleService roleService;
 
-    // Người dùng tự đăng ký thành Owner (chủ nhà / chủ bất động sản)
+    // Người dùng tự đăng ký thành Owner (chủ nhà / chủ bất động sản) — CHỈ USER
     @PostMapping("/become-owner")
-    @Operation(summary = "Tự đăng ký thành Owner (chủ nhà / chủ bất động sản)")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Tự đăng ký thành Owner (chỉ dành cho USER)")
     public ResponseEntity<ApiResponse<OwnerResponse>> becomeOwner(
-            @RequestBody(required = false) BecomeOwnerRequest request) {
+            @Valid @RequestBody(required = false) BecomeOwnerRequest request) {
 
         // Cho phép body rỗng
         if (request == null) {
@@ -46,9 +47,10 @@ public class RoleController {
         return ResponseEntity.ok(ApiResponse.success(response, "Đăng ký thành chủ nhà thành công"));
     }
 
-    // Gui yêu cầu làm Agent (môi giới) đến Admin duyệt
+    // Gửi yêu cầu làm Agent (môi giới) đến Admin duyệt — CHỈ USER
     @PostMapping("/agent-requests")
-    @Operation(summary = "Gửi yêu cầu trở thành môi giới (chờ Admin duyệt)")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Gửi yêu cầu trở thành môi giới (chỉ dành cho USER, chờ Admin duyệt)")
     public ResponseEntity<ApiResponse<AgentRequestResponse>> submitAgentRequest(
             @Valid @RequestBody BecomeAgentRequest request) {
 

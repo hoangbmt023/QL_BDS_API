@@ -66,6 +66,10 @@ public class AgentRequest {
     @Column(columnDefinition = "TEXT")
     private String adminNote;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean isDeleted = false;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

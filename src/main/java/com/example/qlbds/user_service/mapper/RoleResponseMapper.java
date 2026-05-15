@@ -19,5 +19,6 @@ public interface RoleResponseMapper {
 
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "username", source = "user.username")
+    @Mapping(target = "slug", source = "user.agent.slug")
     AgentRequestResponse toAgentRequestResponse(AgentRequest agentRequest);
 }
