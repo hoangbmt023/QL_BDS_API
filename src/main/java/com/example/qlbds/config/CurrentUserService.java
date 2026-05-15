@@ -19,12 +19,7 @@ public class CurrentUserService {
 
     private final UserRepository userRepository;
 
-    /**
-     * Lấy User entity của người dùng đang đăng nhập.
-     *
-     * @throws ResourceNotFoundException nếu không tìm thấy user trong DB
-     * @throws IllegalStateException     nếu chưa đăng nhập
-     */
+
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -38,9 +33,6 @@ public class CurrentUserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
     }
 
-    /**
-     * Lấy username của người dùng đang đăng nhập.
-     */
     public String getCurrentUsername() {
         return getCurrentUser().getUsername();
     }

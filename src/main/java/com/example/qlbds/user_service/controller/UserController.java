@@ -24,13 +24,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Quản lý thông tin người dùng (yêu cầu JWT).
- *
- * GET  /api/users/me          → Bất kỳ user đã đăng nhập
- * GET  /api/users             → Chỉ ADMIN
- * PATCH /api/users/{id}/role  → Chỉ ADMIN
- */
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -40,6 +33,7 @@ public class UserController {
 
     private final UserService userService;
 
+    // Xem thông tin cá nhân của người dùng đang đăng nhập
     @GetMapping("/me")
     @Operation(summary = "Xem thông tin cá nhân của tài khoản đang đăng nhập")
     public ResponseEntity<ApiResponse<UserProfileResponse>> me() throws ResourceNotFoundException {
@@ -48,6 +42,7 @@ public class UserController {
                 ApiResponse.success(profile, "Lấy thông tin cá nhân thành công"));
     }
 
+    // Lấy danh sách tất cả người dùng (ADMIN)
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Lấy danh sách tất cả người dùng (chỉ ADMIN)")
@@ -57,6 +52,7 @@ public class UserController {
                 ApiResponse.success(users, "Lấy danh sách người dùng thành công"));
     }
 
+    // Thay đổi vai trò của người dùng (ADMIN)
     @PatchMapping("/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Thay đổi quyền của người dùng (chỉ ADMIN)")

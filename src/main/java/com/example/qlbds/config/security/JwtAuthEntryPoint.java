@@ -14,10 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Xử lý lỗi 401 — Chưa xác thực (thiếu token / token không hợp lệ).
- * Trả về JSON thay vì trang lỗi HTML mặc định của Spring Security.
- */
+// Xử lý lỗi khi người dùng chưa đăng nhập hoặc token không hợp lệ truy cập vào endpoint cần authentication. Trả về lỗi 401 với message rõ ràng.
 @Slf4j
 @Component
 @RequiredArgsConstructor
