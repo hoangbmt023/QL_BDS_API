@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mã OTP xác thực</title>
+</head>
+<body>
+    <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>Xin chào,</h2>
+        <p>Đây là mã OTP xác thực của bạn:</p>
+        <h3 style="color: #4CAF50; font-size: 24px;" th:text="${otp}">123456</h3>
+        <p>Mã này sẽ hết hạn trong vòng <span th:text="${expire}">5</span> phút.</p>
+        <p>Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>
+        <p>Trân trọng,<br/>Đội ngũ QLBDS</p>
+    </div>
+</body>
+</html>

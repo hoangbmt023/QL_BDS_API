@@ -1,20 +1,18 @@
-package com.example.qlbds.viewing_service.entity;
+package com.example.qlbds.user_service.entity;
 
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
-import com.example.qlbds.property_service.entity.Property;
-import com.example.qlbds.shared.entity.enums.ViewingStatus;
-import com.example.qlbds.user_service.entity.User;
+import com.example.qlbds.shared.entity.enums.AgentRequestStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -30,42 +28,43 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "viewings", indexes = {
-        @Index(name = "idx_viewings_property", columnList = "property_id"),
-        @Index(name = "idx_viewings_user", columnList = "user_id"),
-        @Index(name = "idx_viewings_time", columnList = "scheduled_time"),
-        @Index(name = "idx_viewing_property_time", columnList = "property_id, scheduled_time")
+@Table(name = "agent_requests", indexes = {
+        @Index(name = "idx_agent_requests_user",   columnList = "user_id"),
+        @Index(name = "idx_agent_requests_status", columnList = "status")
 })
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Viewing {
+public class AgentRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "property_id", nullable = false, foreignKey = @ForeignKey(name = "fk_viewing_property"))
-    private Property property;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_viewing_user"))
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false,
+                foreignKey = @ForeignKey(name = "fk_agent_req_user"))
     private User user;
 
-    @Column(nullable = false)
-    private LocalDateTime scheduledTime;
+    @Column(length = 150)
+    private String agencyName;
 
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(columnDefinition = "viewing_status")
-    @Builder.Default
-    private ViewingStatus status = ViewingStatus.PENDING;
+    @Column(nullable = false, length = 100)
+    private String licenseNumber;
 
     @Column(columnDefinition = "TEXT")
     private String note;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false, columnDefinition = "agent_request_status")
+    @Builder.Default
+    private AgentRequestStatus status = AgentRequestStatus.PENDING;
+
+    @Column(columnDefinition = "TEXT")
+    private String adminNote;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
