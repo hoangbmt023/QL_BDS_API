@@ -35,10 +35,7 @@ public class AuthController {
         authService.register(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ApiResponse.<Void>builder()
-                        .success(true)
-                        .message("Đăng ký thành công. Vui lòng gửi yêu cầu OTP để kích hoạt tài khoản")
-                        .build());
+                .body(ApiResponse.success("Đăng ký thành công. Vui lòng gửi yêu cầu OTP để kích hoạt tài khoản"));
     }
 
     @PostMapping("/login")
@@ -60,48 +57,70 @@ public class AuthController {
     @Operation(summary = "Thu hồi refresh token (dành cho Admin)")
     public ResponseEntity<ApiResponse<Void>> revokeToken(@Valid @RequestBody RevokeTokenRequest request) {
         authService.revokeToken(request);
-        return ResponseEntity.ok(ApiResponse.<Void>builder().success(true).message("Thu hồi refresh token thành công").build());
+        return ResponseEntity
+                .ok(ApiResponse.success("Thu hồi refresh token thành công"));
     }
 
     @PostMapping("/logout")
     @Operation(summary = "Đăng xuất và thu hồi refresh token")
     public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody LogoutRequest request) {
         authService.logout(request);
-        return ResponseEntity.ok(ApiResponse.<Void>builder().success(true).message("Đăng xuất thành công").build());
+        return ResponseEntity.ok(ApiResponse.success("Đăng xuất thành công"));
     }
 
     @PostMapping("/forgot-password")
     @Operation(summary = "Gửi OTP quên mật khẩu qua email")
     public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         authService.generateAndSendForgotPasswordOtpEmail(request);
-        return ResponseEntity.ok(ApiResponse.<Void>builder().success(true).message("Mã OTP đã được gửi đến email").build());
+        return ResponseEntity
+                .ok(ApiResponse.success("Mã OTP đã được gửi đến email"));
     }
 
     @PostMapping("/verify-forgot-password")
     @Operation(summary = "Xác thực OTP quên mật khẩu")
-    public ResponseEntity<ApiResponse<Void>> verifyForgotPassword(@Valid @RequestBody VerifyForgotPasswordRequest request) {
+    public ResponseEntity<ApiResponse<Void>> verifyForgotPassword(
+            @Valid @RequestBody VerifyForgotPasswordRequest request) {
         authService.verifyForgotPassword(request);
-        return ResponseEntity.ok(ApiResponse.<Void>builder().success(true).message("Mã OTP hợp lệ").build());
+        return ResponseEntity.ok(ApiResponse.success("Mã OTP hợp lệ"));
     }
 
     @PostMapping("/reset-password")
     @Operation(summary = "Đặt lại mật khẩu mới")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         authService.resetPassword(request);
-        return ResponseEntity.ok(ApiResponse.<Void>builder().success(true).message("Đặt lại mật khẩu thành công").build());
+        return ResponseEntity
+                .ok(ApiResponse.success("Đặt lại mật khẩu thành công"));
     }
 
     @PostMapping("/send-activate-otp")
     @Operation(summary = "Gửi OTP kích hoạt tài khoản qua email")
     public ResponseEntity<ApiResponse<Void>> sendActivateOtp(@Valid @RequestBody SendActivateOtpRequest request) {
         authService.generateAndSendActivateOtpEmail(request);
-        return ResponseEntity.ok(ApiResponse.<Void>builder().success(true).message("Mã OTP kích hoạt đã được gửi đến email").build());
+        return ResponseEntity.ok(
+                ApiResponse.success("Mã OTP kích hoạt đã được gửi đến email"));
     }
 
     @PostMapping("/activate-account")
     @Operation(summary = "Kích hoạt tài khoản bằng mã OTP")
     public ResponseEntity<ApiResponse<Void>> activateAccount(@Valid @RequestBody ActivateAccountRequest request) {
         authService.activateAccount(request);
-        return ResponseEntity.ok(ApiResponse.<Void>builder().success(true).message("Kích hoạt tài khoản thành công").build());
+        return ResponseEntity
+                .ok(ApiResponse.success("Kích hoạt tài khoản thành công"));
+    }
+
+    @PostMapping("/send-restore-otp")
+    @Operation(summary = "Gửi OTP khôi phục tài khoản qua email")
+    public ResponseEntity<ApiResponse<Void>> sendRestoreOtp(@Valid @RequestBody SendRestoreOtpRequest request) {
+        authService.generateAndSendRestoreOtpEmail(request);
+        return ResponseEntity.ok(
+                ApiResponse.success("Mã OTP khôi phục đã được gửi đến email"));
+    }
+
+    @PostMapping("/restore-account")
+    @Operation(summary = "Khôi phục tài khoản bằng mã OTP")
+    public ResponseEntity<ApiResponse<Void>> restoreAccount(@Valid @RequestBody RestoreAccountRequest request) {
+        authService.restoreAccount(request);
+        return ResponseEntity
+                .ok(ApiResponse.success("Khôi phục tài khoản thành công"));
     }
 }

@@ -25,4 +25,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Tìm theo username bất kể trạng thái (dùng cho nội bộ hoặc restore)
     Optional<User> findByUsername(String username);
+
+    // Tìm theo email bất kể trạng thái
+    Optional<User> findByEmail(String email);
+
+    // Kiểm tra tên đăng nhập (bất kể trạng thái)
+    boolean existsByUsername(String username);
+
+    // Kiểm tra email (bất kể trạng thái)
+    boolean existsByEmail(String email);
 }

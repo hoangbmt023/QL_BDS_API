@@ -25,6 +25,7 @@ import com.example.qlbds.config.JwtService;
 import com.example.qlbds.shared.entity.enums.UserRole;
 import com.example.qlbds.user_service.entity.User;
 import com.example.qlbds.user_service.repository.UserRepository;
+import com.example.qlbds.user_service.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,17 +44,18 @@ public class AuthServiceImpl implements AuthService {
     private final OtpRepository otpRepository;
     private final OtpRateLimiter otpRateLimiter;
     private final OtpGenerator otpGenerator;
+    private final UserService userService;
 
     // Đăng ký tài khoản người dùng mới
     @Override
     @Transactional
     public void register(RegisterRequest request) {
-        if (userRepository.existsByUsernameAndIsDeletedFalse(request.username())) {
+        if (userRepository.existsByUsername(request.username())) {
             throw new DuplicateResourceException("Người dùng",
-                    "tên đăng nhập '" + request.username() + "' đã được sử dụng");
+                    "tên đăng nhập '" + request.username() + "' đã tồn tại (nếu tài khoản đã bị xóa, vui lòng khôi phục)");
         }
-        if (userRepository.existsByEmailAndIsDeletedFalse(request.email())) {
-            throw new DuplicateResourceException("Người dùng", "email '" + request.email() + "' đã được đăng ký");
+        if (userRepository.existsByEmail(request.email())) {
+            throw new DuplicateResourceException("Người dùng", "email '" + request.email() + "' đã tồn tại (nếu tài khoản đã bị xóa, vui lòng khôi phục)");
         }
 
         User newUser = User.builder()
@@ -248,6 +250,54 @@ public class AuthServiceImpl implements AuthService {
 
         user.activate();
         userRepository.save(user);
+    }
+
+    // Tạo và gửi mã OTP qua email để khôi phục tài khoản
+    @Override
+    public void generateAndSendRestoreOtpEmail(SendRestoreOtpRequest request) {
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với email: " + request.email()));
+
+        if (!user.getIsDeleted()) {
+            throw new InvalidResourceException("Tài khoản", "đang hoạt động bình thường, không cần khôi phục");
+        }
+
+        if (!otpRateLimiter.canSend(request.email())) {
+            throw new InvalidResourceException("OTP", "vui lòng đợi 60 giây trước khi gửi lại OTP");
+        }
+
+        String otpCode = otpGenerator.generateOtp(6);
+        Otp otp = Otp.create(otpCode, 300);
+        otpRepository.save(request.email(), otp);
+
+        emailService.sendOtpEmail(request.email(), otpCode);
+        otpRateLimiter.recordSend(request.email());
+    }
+
+    // Khôi phục tài khoản bằng mã OTP
+    @Override
+    @Transactional
+    public void restoreAccount(RestoreAccountRequest request) {
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng với email: " + request.email()));
+
+        if (!user.getIsDeleted()) {
+            throw new InvalidResourceException("Tài khoản", "đang hoạt động bình thường, không cần khôi phục");
+        }
+
+        Otp otp = otpRepository.get(request.email());
+
+        if (otp == null) {
+            throw new InvalidResourceException("Mã OTP", "không hợp lệ hoặc đã hết hạn");
+        }
+
+        otp.verify(request.otp());
+        otpRepository.remove(request.email());
+
+        // Gọi sang UserService để khôi phục user và các record liên quan (Agent/Owner)
+        userService.restoreUser(user.getId());
+
+        log.info("Người dùng [{}] đã tự khôi phục tài khoản thành công qua OTP", user.getUsername());
     }
 
     // ==================== Private function ====================
