@@ -24,4 +24,7 @@ public interface UserService {
 
     // Xóa user (soft-delete).
     void deleteUser(Long userId) throws ResourceNotFoundException;
+
+    // Khôi phục user đã bị xóa mềm (dành cho ADMIN).
+    void restoreUser(Long userId) throws ResourceNotFoundException;
 }

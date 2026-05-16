@@ -19,8 +19,11 @@ import com.example.qlbds.user_service.entity.Owner;
 import com.example.qlbds.user_service.entity.User;
 import com.example.qlbds.user_service.mapper.UserResponseMapper;
 import com.example.qlbds.user_service.repository.AgentRepository;
+import com.example.qlbds.user_service.repository.AgentRequestRepository;
 import com.example.qlbds.user_service.repository.OwnerRepository;
 import com.example.qlbds.user_service.repository.UserRepository;
+import com.example.qlbds.auth_service.repository.RefreshTokenRepository;
+import com.example.qlbds.property_service.repository.PropertyRepository;
 import com.example.qlbds.user_service.service.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -34,6 +37,9 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final OwnerRepository ownerRepository;
     private final AgentRepository agentRepository;
+    private final AgentRequestRepository agentRequestRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final PropertyRepository propertyRepository;
     private final CurrentUserService currentUserService;
     private final UserResponseMapper userResponseMapper;
 
@@ -136,17 +142,76 @@ public class UserServiceImpl implements UserService {
         user.setIsDeleted(true);
         userRepository.save(user);
 
-        // Xóa mềm luôn hồ sơ Agent/Owner nếu có
+        // 1. Xóa mềm hồ sơ Agent/Owner nếu có
         agentRepository.findByUserAndIsDeletedFalse(user).ifPresent(agent -> {
             agent.setIsDeleted(true);
             agentRepository.save(agent);
+            // Xóa luôn các Property do Agent này quản lý
+            propertyRepository.findAllByAgent(agent).forEach(p -> {
+                p.setIsDeleted(true);
+                propertyRepository.save(p);
+            });
         });
         ownerRepository.findByUserAndIsDeletedFalse(user).ifPresent(owner -> {
             owner.setIsDeleted(true);
             ownerRepository.save(owner);
+            // Xóa luôn các Property của Owner này
+            propertyRepository.findAllByOwner(owner).forEach(p -> {
+                p.setIsDeleted(true);
+                propertyRepository.save(p);
+            });
         });
 
-        log.info("Admin đã xóa mềm user [{}]", userId);
+        // 2. Xóa mềm các AgentRequest đang có (nếu có)
+        agentRequestRepository.findTopByUserAndIsDeletedFalseOrderByCreatedAtDesc(user).ifPresent(request -> {
+            request.setIsDeleted(true);
+            agentRequestRepository.save(request);
+        });
+
+        // 3. Thu hồi tất cả Refresh Tokens (đăng xuất khỏi mọi thiết bị)
+        refreshTokenRepository.deleteByUser(user);
+
+        log.info("Admin đã xóa mềm toàn bộ dữ liệu liên quan đến user [{}]", userId);
+    }
+
+    // Khôi phục user (soft-restore)
+    @Override
+    @Transactional
+    public void restoreUser(Long userId) throws ResourceNotFoundException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Người dùng", userId));
+
+        if (!user.getIsDeleted()) {
+            throw new InvalidResourceException("Người dùng", "Tài khoản chưa bị xóa");
+        }
+
+        user.setIsDeleted(false);
+        userRepository.save(user);
+
+        // Khôi phục hồ sơ Agent/Owner nếu có và tương ứng với role hiện tại
+        if (user.getRole() == UserRole.AGENT) {
+            agentRepository.findByUser(user).ifPresent(agent -> {
+                agent.setIsDeleted(false);
+                agentRepository.save(agent);
+                // Khôi phục các Property liên quan
+                propertyRepository.findAllByAgent(agent).forEach(p -> {
+                    p.setIsDeleted(false);
+                    propertyRepository.save(p);
+                });
+            });
+        } else if (user.getRole() == UserRole.OWNER) {
+            ownerRepository.findByUser(user).ifPresent(owner -> {
+                owner.setIsDeleted(false);
+                ownerRepository.save(owner);
+                // Khôi phục các Property liên quan
+                propertyRepository.findAllByOwner(owner).forEach(p -> {
+                    p.setIsDeleted(false);
+                    propertyRepository.save(p);
+                });
+            });
+        }
+
+        log.info("Admin đã khôi phục user [{}]", userId);
     }
 
     /**
