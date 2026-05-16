@@ -93,4 +93,14 @@ public class UserController {
         return ResponseEntity.ok(
                 ApiResponse.success("Xóa người dùng thành công"));
     }
+
+    // Khôi phục người dùng (ADMIN)
+    @PatchMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Khôi phục người dùng đã bị xóa mềm (chỉ ADMIN)")
+    public ResponseEntity<ApiResponse<Void>> restoreUser(@PathVariable Long id) throws ResourceNotFoundException {
+        userService.restoreUser(id);
+        return ResponseEntity.ok(
+                ApiResponse.success("Khôi phục người dùng thành công"));
+    }
 }

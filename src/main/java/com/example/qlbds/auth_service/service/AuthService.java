@@ -26,4 +26,8 @@ public interface AuthService {
     void generateAndSendActivateOtpEmail(SendActivateOtpRequest request);
 
     void activateAccount(ActivateAccountRequest request);
+
+    void generateAndSendRestoreOtpEmail(SendRestoreOtpRequest request);
+
+    void restoreAccount(RestoreAccountRequest request);
 }
