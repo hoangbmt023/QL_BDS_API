@@ -113,6 +113,9 @@ public class Property {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
+    @Column(columnDefinition = "TEXT")
+    private String rejectionReason;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

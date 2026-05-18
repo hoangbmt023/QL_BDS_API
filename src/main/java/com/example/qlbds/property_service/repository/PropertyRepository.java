@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import com.example.qlbds.property_service.entity.Property;
@@ -14,7 +15,7 @@ import com.example.qlbds.user_service.entity.Agent;
 import com.example.qlbds.user_service.entity.Owner;
 
 @Repository
-public interface PropertyRepository extends JpaRepository<Property, Long> {
+public interface PropertyRepository extends JpaRepository<Property, Long>, JpaSpecificationExecutor<Property> {
 
     // Lấy danh sách property theo status và chưa bị xóa, đang hiển thị
     Page<Property> findByStatusAndVisibilityTrueAndIsDeletedFalse(PropertyStatus status, Pageable pageable);
@@ -36,4 +37,8 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
     // Lấy tất cả property của một Agent (bao gồm cả đã xóa để khôi phục)
     List<Property> findAllByAgent(Agent agent);
+
+    // Gợi ý property tương tự (cùng district, city, giới hạn số lượng)
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM Property p WHERE p.city = :city AND p.district = :district AND p.id != :id AND p.visibility = true AND p.isDeleted = false")
+    Page<Property> findSimilarProperties(String city, String district, Long id, Pageable pageable);
 }
