@@ -2,22 +2,31 @@ package com.example.qlbds.property_service.controller;
 
 import com.example.qlbds.common.response.PageResponse;
 import com.example.qlbds.property_service.dto.CreatePropertyRequest;
+import com.example.qlbds.property_service.dto.PropertyAnalyticsResponse;
 import com.example.qlbds.property_service.dto.PropertyResponse;
 import com.example.qlbds.property_service.dto.UpdatePropertyRequest;
 import com.example.qlbds.property_service.service.PropertyService;
-
+import com.example.qlbds.shared.dto.ApiResponse;
+import com.example.qlbds.shared.entity.enums.PropertyStatus;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/properties")
+@RequestMapping("/api/properties")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "Bất động sản", description = "Quản lý thông tin bất động sản")
@@ -25,46 +34,111 @@ public class PropertyController {
 
     private final PropertyService propertyService;
 
-    // Tạo mới một bất động sản
+    // Tạo mới bất động sản — OWNER hoặc AGENT
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Tạo mới bất động sản", description = "Tạo mới một bất động sản với thông tin chi tiết")
-    public PropertyResponse create(@Valid @RequestBody CreatePropertyRequest request) {
-        return propertyService.create(request);
+    @PreAuthorize("hasAnyRole('OWNER', 'AGENT', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Tạo mới bất động sản")
+    public ResponseEntity<ApiResponse<PropertyResponse>> create(
+            @Valid @RequestBody CreatePropertyRequest request) {
+        PropertyResponse created = propertyService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(created, "Tạo bất động sản thành công, chờ Moderator duyệt"));
     }
 
-    // Lấy danh sách bất động sản với phân trang và tìm kiếm
+    // Lấy danh sách bất động sản với phân trang và lọc (Public)
     @GetMapping
-    @Operation(summary = "Lấy danh sách bất động sản", description = "Lấy danh sách bất động sản với phân trang và tìm kiếm theo tên hoặc địa chỉ")
-    public PageResponse<PropertyResponse> findAll(
+    @Operation(summary = "Lấy danh sách bất động sản (lọc động + phân trang)")
+    public ResponseEntity<ApiResponse<PageResponse<PropertyResponse>>> findAll(
             @RequestParam(name = "search", required = false) String search,
-            @RequestParam(name = "page", defaultValue = "0") @Min(value = 0, message = "page must be >= 0") int page,
-            @RequestParam(name = "size", defaultValue = "20") @Min(value = 1, message = "size must be >= 1") int size) {
+            @RequestParam(name = "city", required = false) String city,
+            @RequestParam(name = "district", required = false) String district,
+            @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
+            @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
+            @RequestParam(name = "bedrooms", required = false) Integer bedrooms,
+            @RequestParam(name = "bathrooms", required = false) Integer bathrooms,
+            @RequestParam(name = "status", required = false) PropertyStatus status,
+            @RequestParam(name = "page", defaultValue = "0") @Min(0) int page,
+            @RequestParam(name = "size", defaultValue = "20") @Min(1) int size) {
 
-        return propertyService.findAll(search, page, size);
+        PageResponse<PropertyResponse> result = propertyService.findAll(
+                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, page, size);
+        return ResponseEntity.ok(ApiResponse.success(result, "Lấy danh sách bất động sản thành công"));
     }
 
-    // Lấy chi tiết bất động sản theo ID
+    // Lấy chi tiết bất động sản theo ID (Public)
     @GetMapping("/{id}")
-    @Operation(summary = "Lấy chi tiết bất động sản", description = "Lấy chi tiết thông tin bất động sản theo ID")
-    public PropertyResponse findById(@PathVariable(name = "id") Long id) {
-        return propertyService.findById(id);
+    @Operation(summary = "Lấy chi tiết bất động sản")
+    public ResponseEntity<ApiResponse<PropertyResponse>> findById(@PathVariable Long id) {
+        PropertyResponse response = propertyService.findById(id);
+        return ResponseEntity.ok(ApiResponse.success(response, "Lấy chi tiết bất động sản thành công"));
     }
 
-    // Cập nhật thông tin bất động sản theo ID
+    // Cập nhật bất động sản — OWNER, AGENT hoặc ADMIN
     @PatchMapping("/{id}")
-    @Operation(summary = "Cập nhật bất động sản", description = "Cập nhật thông tin bất động sản theo ID")
-    public PropertyResponse update(
-            @PathVariable(name = "id") Long id,
+    @PreAuthorize("hasAnyRole('OWNER', 'AGENT', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Cập nhật bất động sản (tự động yêu cầu duyệt lại)")
+    public ResponseEntity<ApiResponse<PropertyResponse>> update(
+            @PathVariable Long id,
             @Valid @RequestBody UpdatePropertyRequest request) {
-        return propertyService.update(id, request);
+        PropertyResponse updated = propertyService.update(id, request);
+        return ResponseEntity.ok(ApiResponse.success(updated, "Cập nhật thành công, chờ Moderator duyệt lại"));
     }
 
-    // Xóa bất động sản theo ID (ẩn visibility)
+    // Xóa mềm bất động sản — OWNER, AGENT hoặc ADMIN
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Xóa bất động sản", description = "Xóa bất động sản theo ID (thực tế là ẩn visibility)")
-    public void delete(@PathVariable(name = "id") Long id) {
+    @PreAuthorize("hasAnyRole('OWNER', 'AGENT', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Xóa bất động sản (soft-delete)")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         propertyService.delete(id);
+        return ResponseEntity.ok(ApiResponse.success("Xóa bất động sản thành công"));
+    }
+
+    // Upload nhiều ảnh cho một property — OWNER, AGENT hoặc ADMIN
+    @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('OWNER', 'AGENT', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Upload nhiều hình ảnh cho bất động sản")
+    public ResponseEntity<ApiResponse<List<String>>> uploadImages(
+            @PathVariable Long id,
+            @RequestPart("files") List<MultipartFile> files) {
+        List<String> urls = propertyService.uploadImages(id, files);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(urls, "Upload ảnh thành công"));
+    }
+
+    // Gợi ý property tương tự (Public)
+    @GetMapping("/{id}/similar")
+    @Operation(summary = "Gợi ý bất động sản tương tự")
+    public ResponseEntity<ApiResponse<List<PropertyResponse>>> getSimilarProperties(
+            @PathVariable Long id,
+            @RequestParam(name = "limit", defaultValue = "5") @Min(1) int limit) {
+        List<PropertyResponse> similar = propertyService.getSimilarProperties(id, limit);
+        return ResponseEntity.ok(ApiResponse.success(similar, "Lấy danh sách gợi ý thành công"));
+    }
+
+    // Đổi trạng thái property — chỉ MODERATOR hoặc ADMIN
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('MODERATOR', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Cập nhật trạng thái (APPROVED, REJECTED, HIDDEN...) — Moderator/Admin")
+    public ResponseEntity<ApiResponse<PropertyResponse>> changeStatus(
+            @PathVariable Long id,
+            @RequestParam("status") PropertyStatus status,
+            @RequestParam(name = "reason", required = false) String reason) {
+        PropertyResponse updated = propertyService.changeStatus(id, status, reason);
+        return ResponseEntity.ok(ApiResponse.success(updated, "Cập nhật trạng thái thành công"));
+    }
+
+    // Thống kê hiệu quả listing — ADMIN, MODERATOR, OWNER, AGENT
+    @GetMapping("/{id}/analytics")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR', 'OWNER', 'AGENT')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Thống kê hiệu quả listing")
+    public ResponseEntity<ApiResponse<PropertyAnalyticsResponse>> getAnalytics(@PathVariable Long id) {
+        PropertyAnalyticsResponse analytics = propertyService.getAnalytics(id);
+        return ResponseEntity.ok(ApiResponse.success(analytics, "Lấy thống kê thành công"));
     }
 }
