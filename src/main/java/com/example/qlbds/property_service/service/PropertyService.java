@@ -22,7 +22,7 @@ public interface PropertyService {
             String search, String city, String district,
             BigDecimal minPrice, BigDecimal maxPrice,
             Integer bedrooms, Integer bathrooms,
-            PropertyStatus status, int page, int size);
+            PropertyStatus status, int page, int size, boolean onlyVisible, Long userId);
 
     // Lấy chi tiết một bất động sản theo ID (chỉ visible & chưa xóa).
     PropertyResponse findById(Long id);
