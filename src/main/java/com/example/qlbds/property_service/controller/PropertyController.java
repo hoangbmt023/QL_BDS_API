@@ -1,6 +1,7 @@
 package com.example.qlbds.property_service.controller;
 
 import com.example.qlbds.common.response.PageResponse;
+import com.example.qlbds.config.CurrentUserService;
 import com.example.qlbds.property_service.dto.CreatePropertyRequest;
 import com.example.qlbds.property_service.dto.PropertyAnalyticsResponse;
 import com.example.qlbds.property_service.dto.PropertyResponse;
@@ -8,6 +9,8 @@ import com.example.qlbds.property_service.dto.UpdatePropertyRequest;
 import com.example.qlbds.property_service.service.PropertyService;
 import com.example.qlbds.shared.dto.ApiResponse;
 import com.example.qlbds.shared.entity.enums.PropertyStatus;
+import com.example.qlbds.user_service.entity.User;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,6 +36,7 @@ import java.util.List;
 public class PropertyController {
 
     private final PropertyService propertyService;
+    private final CurrentUserService currentUserService;
 
     // Tạo mới bất động sản — OWNER hoặc AGENT
     @PostMapping
@@ -41,9 +45,9 @@ public class PropertyController {
     @Operation(summary = "Tạo mới bất động sản")
     public ResponseEntity<ApiResponse<PropertyResponse>> create(
             @Valid @RequestBody CreatePropertyRequest request) {
-        PropertyResponse created = propertyService.create(request);
+        PropertyResponse response = propertyService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(created, "Tạo bất động sản thành công, chờ Moderator duyệt"));
+                .body(ApiResponse.success(response, "Tạo bất động sản thành công. Đang chờ duyệt."));
     }
 
     // Lấy danh sách bất động sản với phân trang và lọc (Public)
@@ -62,7 +66,55 @@ public class PropertyController {
             @RequestParam(name = "size", defaultValue = "20") @Min(1) int size) {
 
         PageResponse<PropertyResponse> result = propertyService.findAll(
-                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, page, size);
+                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, page, size, true, null);
+        return ResponseEntity.ok(ApiResponse.success(result, "Lấy danh sách bất động sản thành công"));
+    }
+
+    // Lấy danh sách bất động sản của chính mình (Owner/Agent)
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyRole('OWNER', 'AGENT')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Lấy danh sách bất động sản của tôi (Owner/Agent)")
+    public ResponseEntity<ApiResponse<PageResponse<PropertyResponse>>> findMyProperties(
+            @RequestParam(name = "search", required = false) String search,
+            @RequestParam(name = "city", required = false) String city,
+            @RequestParam(name = "district", required = false) String district,
+            @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
+            @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
+            @RequestParam(name = "bedrooms", required = false) Integer bedrooms,
+            @RequestParam(name = "bathrooms", required = false) Integer bathrooms,
+            @RequestParam(name = "status", required = false) PropertyStatus status,
+            @RequestParam(name = "page", defaultValue = "0") @Min(0) int page,
+            @RequestParam(name = "size", defaultValue = "20") @Min(1) int size) {
+
+        User currentUser = currentUserService.getCurrentUser();
+
+        PageResponse<PropertyResponse> result = propertyService.findAll(
+                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, page, size, false,
+                currentUser.getId());
+        return ResponseEntity.ok(ApiResponse.success(result, "Lấy danh sách bất động sản của tôi thành công"));
+    }
+
+    // Lấy danh sách tất cả bất động sản cho Admin/Moderator (không quan tâm
+    // visibility)
+    @GetMapping("/admin")
+    @PreAuthorize("hasAnyRole('MODERATOR', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Lấy tất cả danh sách bất động sản cho Admin/Moderator duyệt")
+    public ResponseEntity<ApiResponse<PageResponse<PropertyResponse>>> findAllForAdmin(
+            @RequestParam(name = "search", required = false) String search,
+            @RequestParam(name = "city", required = false) String city,
+            @RequestParam(name = "district", required = false) String district,
+            @RequestParam(name = "minPrice", required = false) BigDecimal minPrice,
+            @RequestParam(name = "maxPrice", required = false) BigDecimal maxPrice,
+            @RequestParam(name = "bedrooms", required = false) Integer bedrooms,
+            @RequestParam(name = "bathrooms", required = false) Integer bathrooms,
+            @RequestParam(name = "status", required = false) PropertyStatus status,
+            @RequestParam(name = "page", defaultValue = "0") @Min(0) int page,
+            @RequestParam(name = "size", defaultValue = "20") @Min(1) int size) {
+
+        PageResponse<PropertyResponse> result = propertyService.findAll(
+                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, page, size, false, null);
         return ResponseEntity.ok(ApiResponse.success(result, "Lấy danh sách bất động sản thành công"));
     }
 

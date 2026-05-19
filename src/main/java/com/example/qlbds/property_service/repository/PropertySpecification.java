@@ -18,14 +18,25 @@ public class PropertySpecification {
             BigDecimal maxPrice,
             Integer bedrooms,
             Integer bathrooms,
-            PropertyStatus status) {
+            PropertyStatus status,
+            boolean onlyVisible,
+            Long userId) {
         
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             
-            // Only visible and not deleted properties
-            predicates.add(criteriaBuilder.isTrue(root.get("visibility")));
+            // Not deleted properties
             predicates.add(criteriaBuilder.isFalse(root.get("isDeleted")));
+            
+            if (onlyVisible) {
+                predicates.add(criteriaBuilder.isTrue(root.get("visibility")));
+            }
+            
+            if (userId != null) {
+                Predicate isOwner = criteriaBuilder.equal(root.get("owner").get("user").get("id"), userId);
+                Predicate isAgent = criteriaBuilder.equal(root.get("agent").get("user").get("id"), userId);
+                predicates.add(criteriaBuilder.or(isOwner, isAgent));
+            }
             
             if (search != null && !search.trim().isEmpty()) {
                 String searchLower = "%" + search.trim().toLowerCase() + "%";
