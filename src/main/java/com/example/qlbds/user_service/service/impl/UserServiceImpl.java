@@ -74,54 +74,57 @@ public class UserServiceImpl implements UserService {
         // 2. Cập nhật thông tin Agent nếu có
         if (request.agent() != null) {
             agentRepository.findByUser(user).ifPresentOrElse(
-                agent -> {
-                    if (request.agent().licenseNumber() != null) agent.setLicenseNumber(request.agent().licenseNumber());
-                    if (request.agent().agencyName() != null)    agent.setAgencyName(request.agent().agencyName());
-                    
-                    String slugBase = (agent.getAgencyName() != null && !agent.getAgencyName().isBlank())
-                            ? agent.getAgencyName()
-                            : user.getUsername();
-                    agent.setSlug(SlugUtil.toSlug(slugBase));
-                    agentRepository.save(agent);
-                },
-                () -> {
-                    // Nếu chưa có hồ sơ Agent nhưng request có dữ liệu -> chỉ tạo nếu role là AGENT
-                    if (user.getRole() == UserRole.AGENT) {
-                        String slugBase = (request.agent().agencyName() != null && !request.agent().agencyName().isBlank())
-                                ? request.agent().agencyName()
+                    agent -> {
+                        if (request.agent().licenseNumber() != null)
+                            agent.setLicenseNumber(request.agent().licenseNumber());
+                        if (request.agent().agencyName() != null)
+                            agent.setAgencyName(request.agent().agencyName());
+
+                        String slugBase = (agent.getAgencyName() != null && !agent.getAgencyName().isBlank())
+                                ? agent.getAgencyName()
                                 : user.getUsername();
-                        Agent newAgent = Agent.builder()
-                                .user(user)
-                                .licenseNumber(request.agent().licenseNumber())
-                                .agencyName(request.agent().agencyName())
-                                .slug(SlugUtil.toSlug(slugBase))
-                                .build();
-                        agentRepository.save(newAgent);
-                    }
-                }
-            );
+                        agent.setSlug(SlugUtil.toSlug(slugBase));
+                        agentRepository.save(agent);
+                    },
+                    () -> {
+                        // Nếu chưa có hồ sơ Agent nhưng request có dữ liệu -> chỉ tạo nếu role là AGENT
+                        if (user.getRole() == UserRole.AGENT) {
+                            String slugBase = (request.agent().agencyName() != null
+                                    && !request.agent().agencyName().isBlank())
+                                            ? request.agent().agencyName()
+                                            : user.getUsername();
+                            Agent newAgent = Agent.builder()
+                                    .user(user)
+                                    .licenseNumber(request.agent().licenseNumber())
+                                    .agencyName(request.agent().agencyName())
+                                    .slug(SlugUtil.toSlug(slugBase))
+                                    .build();
+                            agentRepository.save(newAgent);
+                        }
+                    });
         }
 
         // 3. Cập nhật thông tin Owner nếu có
         if (request.owner() != null) {
             ownerRepository.findByUser(user).ifPresentOrElse(
-                owner -> {
-                    if (request.owner().address() != null)     owner.setAddress(request.owner().address());
-                    if (request.owner().description() != null) owner.setDescription(request.owner().description());
-                    ownerRepository.save(owner);
-                },
-                () -> {
-                    // Nếu chưa có hồ sơ Owner nhưng request có dữ liệu -> chỉ tạo nếu role là OWNER
-                    if (user.getRole() == UserRole.OWNER) {
-                        Owner newOwner = Owner.builder()
-                                .user(user)
-                                .address(request.owner().address())
-                                .description(request.owner().description())
-                                .build();
-                        ownerRepository.save(newOwner);
-                    }
-                }
-            );
+                    owner -> {
+                        if (request.owner().address() != null)
+                            owner.setAddress(request.owner().address());
+                        if (request.owner().description() != null)
+                            owner.setDescription(request.owner().description());
+                        ownerRepository.save(owner);
+                    },
+                    () -> {
+                        // Nếu chưa có hồ sơ Owner nhưng request có dữ liệu -> chỉ tạo nếu role là OWNER
+                        if (user.getRole() == UserRole.OWNER) {
+                            Owner newOwner = Owner.builder()
+                                    .user(user)
+                                    .address(request.owner().address())
+                                    .description(request.owner().description())
+                                    .build();
+                            ownerRepository.save(newOwner);
+                        }
+                    });
         }
 
         log.info("User [{}] đã cập nhật thông tin cá nhân", user.getUsername());
@@ -257,7 +260,8 @@ public class UserServiceImpl implements UserService {
         switch (toRole) {
             case OWNER -> handleBecomeOwner(user, request);
             case AGENT -> handleBecomeAgent(user, request);
-            default -> { /* USER, ADMIN không cần record phụ */ }
+            default -> {
+                /* USER, ADMIN không cần record phụ */ }
         }
 
         // 3. Cập nhật role trên bảng users
@@ -311,7 +315,8 @@ public class UserServiceImpl implements UserService {
                 },
                 () -> {
                     if (request.licenseNumber() == null || request.licenseNumber().isBlank()) {
-                        throw new InvalidResourceException("Agent", "licenseNumber là bắt buộc khi tạo mới hồ sơ Môi giới");
+                        throw new InvalidResourceException("Agent",
+                                "licenseNumber là bắt buộc khi tạo mới hồ sơ Môi giới");
                     }
                     String slugBase = (request.agencyName() != null && !request.agencyName().isBlank())
                             ? request.agencyName()

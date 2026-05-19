@@ -93,11 +93,17 @@ public class PropertyServiceImpl implements PropertyService {
             String search, String city, String district,
             BigDecimal minPrice, BigDecimal maxPrice,
             Integer bedrooms, Integer bathrooms,
-            PropertyStatus status, int page, int size) {
+            PropertyStatus status, int page, int size, boolean onlyVisible, Long userId) {
+
+        // Nếu là request public (onlyVisible = true) và không phải tìm của chính mình (userId = null)
+        // thì chỉ cho phép lấy status = APPROVED
+        if (onlyVisible && userId == null && status != null && status != PropertyStatus.APPROVED) {
+            throw new IllegalArgumentException("Người dùng chỉ có thể lọc bất động sản có trạng thái APPROVED");
+        }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Specification<Property> spec = PropertySpecification.filterProperties(
-                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status);
+                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, onlyVisible, userId);
 
         return PageResponse.from(
                 propertyRepository.findAll(spec, pageable).map(propertyMapper::toResponse));
