@@ -31,6 +31,9 @@ public interface PropertyRepository extends JpaRepository<Property, Long>, JpaSp
     // Tìm chi tiết theo ID và chưa bị xóa, đang hiển thị
     Optional<Property> findByIdAndVisibilityTrueAndIsDeletedFalse(Long id);
 
+    // Tìm chi tiết theo SLUG và chưa bị xóa, đang hiển thị
+    Optional<Property> findBySlugAndVisibilityTrueAndIsDeletedFalse(String slug);
+
     // Tìm theo ID bất kể visibility nhưng phải chưa bị xóa
     Optional<Property> findByIdAndIsDeletedFalse(Long id);
 
