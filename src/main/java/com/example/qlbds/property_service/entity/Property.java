@@ -23,11 +23,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import java.util.List;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
@@ -115,6 +118,9 @@ public class Property {
 
     @Column(columnDefinition = "TEXT")
     private String rejectionReason;
+
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PropertyImage> propertyImages;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

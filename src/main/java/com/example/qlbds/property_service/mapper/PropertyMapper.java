@@ -4,15 +4,21 @@ import com.example.qlbds.property_service.dto.PropertyResponse;
 import com.example.qlbds.property_service.entity.Property;
 import com.example.qlbds.user_service.entity.Agent;
 import com.example.qlbds.user_service.entity.Owner;
+import com.example.qlbds.property_service.entity.PropertyImage;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface PropertyMapper {
 
     @Mapping(source = "owner", target = "owner")
     @Mapping(source = "agent", target = "agent")
+    @Mapping(source = "propertyImages", target = "images")
     PropertyResponse toResponse(Property property);
+
+    PropertyResponse.ImageInfo toImageInfo(PropertyImage propertyImage);
 
     // Owner: lấy fullName, phone, email từ User lồng bên trong Owner
     @Mapping(source = "user.fullName", target = "fullName")

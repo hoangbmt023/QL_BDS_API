@@ -15,6 +15,7 @@ import com.example.qlbds.property_service.repository.PropertySpecification;
 import com.example.qlbds.property_service.service.PropertyService;
 import com.example.qlbds.shared.entity.enums.PropertyStatus;
 import com.example.qlbds.shared.service.FileUploadService;
+import com.example.qlbds.shared.service.SlugService;
 import com.example.qlbds.user_service.entity.Agent;
 import com.example.qlbds.user_service.entity.Owner;
 import com.example.qlbds.user_service.repository.AgentRepository;
@@ -48,6 +49,7 @@ public class PropertyServiceImpl implements PropertyService {
     private final FileUploadService fileUploadService;
     private final OwnerRepository ownerRepository;
     private final AgentRepository agentRepository;
+    private final SlugService slugService;
 
     // Tạo bất động sản mới — mặc định PENDING, chờ Moderator duyệt
     @Override
@@ -67,8 +69,13 @@ public class PropertyServiceImpl implements PropertyService {
                     .orElseThrow(() -> new ResourceNotFoundException("Agent", request.agentId()));
         }
 
+        String baseSlug = request.title() != null && !request.title().isBlank() ? slugService.toSlug(request.title())
+                : "property";
+        String uniqueSlug = baseSlug + "-" + System.currentTimeMillis();
+
         Property property = Property.builder()
                 .title(request.title() != null ? request.title().strip() : null)
+                .slug(uniqueSlug)
                 .description(request.description())
                 .price(request.price())
                 .area(request.area())
@@ -79,8 +86,8 @@ public class PropertyServiceImpl implements PropertyService {
                 .district(request.district())
                 .owner(owner)
                 .agent(agent)
-                .status(PropertyStatus.PENDING)   // mặc định PENDING
-                .visibility(false)                // ẩn cho đến khi được duyệt
+                .status(PropertyStatus.PENDING) // mặc định PENDING
+                .visibility(false) // ẩn cho đến khi được duyệt
                 .isDeleted(false)
                 .build();
 
@@ -95,7 +102,8 @@ public class PropertyServiceImpl implements PropertyService {
             Integer bedrooms, Integer bathrooms,
             PropertyStatus status, int page, int size, boolean onlyVisible, Long userId) {
 
-        // Nếu là request public (onlyVisible = true) và không phải tìm của chính mình (userId = null)
+        // Nếu là request public (onlyVisible = true) và không phải tìm của chính mình
+        // (userId = null)
         // thì chỉ cho phép lấy status = APPROVED
         if (onlyVisible && userId == null && status != null && status != PropertyStatus.APPROVED) {
             throw new IllegalArgumentException("Người dùng chỉ có thể lọc bất động sản có trạng thái APPROVED");
@@ -117,6 +125,15 @@ public class PropertyServiceImpl implements PropertyService {
                 .orElseThrow(() -> new ResourceNotFoundException("Property", id));
     }
 
+    // Lấy chi tiết một bất động sản theo Slug (chỉ hiển thị bài đã duyệt và chưa
+    // xóa)
+    @Override
+    public PropertyResponse findBySlug(String slug) {
+        return propertyRepository.findBySlugAndVisibilityTrueAndIsDeletedFalse(slug)
+                .map(propertyMapper::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Property có slug không tồn tại: " + slug));
+    }
+
     // Cập nhật thông tin — tự động reset về PENDING để duyệt lại
     @Override
     @Transactional
@@ -124,7 +141,15 @@ public class PropertyServiceImpl implements PropertyService {
         Property property = propertyRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property", id));
 
-        property.setTitle(request.title() != null ? request.title().strip() : null);
+        if (request.title() != null && !request.title().isBlank()
+                && !request.title().strip().equals(property.getTitle())) {
+            property.setTitle(request.title().strip());
+            String baseSlug = slugService.toSlug(request.title());
+            property.setSlug(baseSlug + "-" + System.currentTimeMillis());
+        } else if (request.title() != null) {
+            property.setTitle(request.title().strip());
+        }
+
         property.setDescription(request.description());
         property.setPrice(request.price());
         property.setArea(request.area());
@@ -133,9 +158,9 @@ public class PropertyServiceImpl implements PropertyService {
         property.setAddress(request.address());
         property.setCity(request.city());
         property.setDistrict(request.district());
-        property.setStatus(PropertyStatus.PENDING);  // yêu cầu duyệt lại
-        property.setVisibility(false);               // ẩn trong lúc chờ duyệt
-        property.setRejectionReason(null);           // xóa lý do từ chối cũ
+        property.setStatus(PropertyStatus.PENDING); // yêu cầu duyệt lại
+        property.setVisibility(false); // ẩn trong lúc chờ duyệt
+        property.setRejectionReason(null); // xóa lý do từ chối cũ
 
         return propertyMapper.toResponse(property);
     }
@@ -185,6 +210,51 @@ public class PropertyServiceImpl implements PropertyService {
         propertyImageRepository.saveAll(images);
 
         return imageUrls;
+    }
+
+    @Override
+    @Transactional
+    public PropertyResponse.ImageInfo updateImage(Long propertyId, Long imageId, MultipartFile file) {
+        PropertyImage image = propertyImageRepository.findById(imageId)
+                .orElseThrow(() -> new ResourceNotFoundException("PropertyImage", imageId));
+
+        if (!image.getProperty().getId().equals(propertyId)) {
+            throw new IllegalArgumentException("Ảnh không thuộc về bất động sản này");
+        }
+
+        try {
+            // Xóa ảnh cũ trên Cloudinary
+            fileUploadService.deleteFile(image.getImageUrl());
+            // Upload ảnh mới
+            String newUrl = fileUploadService.uploadFile(file, "properties/" + propertyId);
+            image.setImageUrl(newUrl);
+            propertyImageRepository.save(image);
+            return propertyMapper.toImageInfo(image);
+        } catch (IOException e) {
+            log.error("[Update Image] property={} imageId={} error={}", propertyId, imageId, e.getMessage());
+            throw new RuntimeException("Không thể cập nhật ảnh: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteImage(Long propertyId, Long imageId) {
+        PropertyImage image = propertyImageRepository.findById(imageId)
+                .orElseThrow(() -> new ResourceNotFoundException("PropertyImage", imageId));
+
+        if (!image.getProperty().getId().equals(propertyId)) {
+            throw new IllegalArgumentException("Ảnh không thuộc về bất động sản này");
+        }
+
+        try {
+            // Xóa ảnh trên Cloudinary
+            fileUploadService.deleteFile(image.getImageUrl());
+            // Xóa khỏi DB
+            propertyImageRepository.delete(image);
+        } catch (IOException e) {
+            log.error("[Delete Image] property={} imageId={} error={}", propertyId, imageId, e.getMessage());
+            throw new RuntimeException("Không thể xóa ảnh: " + e.getMessage());
+        }
     }
 
     // Gợi ý property tương tự (cùng city & district)
