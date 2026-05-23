@@ -62,11 +62,12 @@ public class PropertyController {
             @RequestParam(name = "bedrooms", required = false) Integer bedrooms,
             @RequestParam(name = "bathrooms", required = false) Integer bathrooms,
             @RequestParam(name = "status", required = false) PropertyStatus status,
-            @RequestParam(name = "page", defaultValue = "0") @Min(0) int page,
+            @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
             @RequestParam(name = "size", defaultValue = "20") @Min(1) int size) {
 
+        int pageIndex = page > 0 ? page - 1 : 0;
         PageResponse<PropertyResponse> result = propertyService.findAll(
-                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, page, size, true, null);
+                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, pageIndex, size, true, null);
         return ResponseEntity.ok(ApiResponse.success(result, "Lấy danh sách bất động sản thành công"));
     }
 
@@ -84,13 +85,14 @@ public class PropertyController {
             @RequestParam(name = "bedrooms", required = false) Integer bedrooms,
             @RequestParam(name = "bathrooms", required = false) Integer bathrooms,
             @RequestParam(name = "status", required = false) PropertyStatus status,
-            @RequestParam(name = "page", defaultValue = "0") @Min(0) int page,
+            @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
             @RequestParam(name = "size", defaultValue = "20") @Min(1) int size) {
 
         User currentUser = currentUserService.getCurrentUser();
 
+        int pageIndex = page > 0 ? page - 1 : 0;
         PageResponse<PropertyResponse> result = propertyService.findAll(
-                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, page, size, false,
+                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, pageIndex, size, false,
                 currentUser.getId());
         return ResponseEntity.ok(ApiResponse.success(result, "Lấy danh sách bất động sản của tôi thành công"));
     }
@@ -110,19 +112,20 @@ public class PropertyController {
             @RequestParam(name = "bedrooms", required = false) Integer bedrooms,
             @RequestParam(name = "bathrooms", required = false) Integer bathrooms,
             @RequestParam(name = "status", required = false) PropertyStatus status,
-            @RequestParam(name = "page", defaultValue = "0") @Min(0) int page,
+            @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
             @RequestParam(name = "size", defaultValue = "20") @Min(1) int size) {
 
+        int pageIndex = page > 0 ? page - 1 : 0;
         PageResponse<PropertyResponse> result = propertyService.findAll(
-                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, page, size, false, null);
+                search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, pageIndex, size, false, null);
         return ResponseEntity.ok(ApiResponse.success(result, "Lấy danh sách bất động sản thành công"));
     }
 
-    // Lấy chi tiết bất động sản theo ID (Public)
-    @GetMapping("/{id}")
+    // Lấy chi tiết bất động sản theo Slug (Public)
+    @GetMapping("/{slug}")
     @Operation(summary = "Lấy chi tiết bất động sản")
-    public ResponseEntity<ApiResponse<PropertyResponse>> findById(@PathVariable Long id) {
-        PropertyResponse response = propertyService.findById(id);
+    public ResponseEntity<ApiResponse<PropertyResponse>> findBySlug(@PathVariable String slug) {
+        PropertyResponse response = propertyService.findBySlug(slug);
         return ResponseEntity.ok(ApiResponse.success(response, "Lấy chi tiết bất động sản thành công"));
     }
 
@@ -159,6 +162,31 @@ public class PropertyController {
         List<String> urls = propertyService.uploadImages(id, files);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(urls, "Upload ảnh thành công"));
+    }
+
+    // Cập nhật 1 ảnh cụ thể
+    @PostMapping(value = "/{id}/images/{imageId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('OWNER', 'AGENT', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Cập nhật thay thế một hình ảnh cụ thể của bất động sản")
+    public ResponseEntity<ApiResponse<PropertyResponse.ImageInfo>> updateImage(
+            @PathVariable Long id,
+            @PathVariable Long imageId,
+            @RequestPart("file") MultipartFile file) {
+        PropertyResponse.ImageInfo imageInfo = propertyService.updateImage(id, imageId, file);
+        return ResponseEntity.ok(ApiResponse.success(imageInfo, "Cập nhật ảnh thành công"));
+    }
+
+    // Xóa 1 ảnh cụ thể
+    @DeleteMapping("/{id}/images/{imageId}")
+    @PreAuthorize("hasAnyRole('OWNER', 'AGENT', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Xóa một hình ảnh cụ thể của bất động sản")
+    public ResponseEntity<ApiResponse<Void>> deleteImage(
+            @PathVariable Long id,
+            @PathVariable Long imageId) {
+        propertyService.deleteImage(id, imageId);
+        return ResponseEntity.ok(ApiResponse.success(null, "Xóa ảnh thành công"));
     }
 
     // Gợi ý property tương tự (Public)

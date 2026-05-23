@@ -15,9 +15,12 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.scheduling.annotation.Async;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Async
 public class EmailServiceImpl implements EmailService {
 
     private final JavaMailSender mailSender;

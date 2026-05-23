@@ -27,6 +27,9 @@ public interface PropertyService {
     // Lấy chi tiết một bất động sản theo ID (chỉ visible & chưa xóa).
     PropertyResponse findById(Long id);
 
+    // Lấy chi tiết một bất động sản theo Slug (chỉ visible & chưa xóa).
+    PropertyResponse findBySlug(String slug);
+
     // Cập nhật thông tin bất động sản — status tự động reset về PENDING.
     PropertyResponse update(Long id, UpdatePropertyRequest request);
 
@@ -38,6 +41,12 @@ public interface PropertyService {
 
     // Upload nhiều ảnh cho một property, trả về danh sách URL.
     List<String> uploadImages(Long propertyId, List<MultipartFile> files);
+
+    // Cập nhật một ảnh cụ thể.
+    PropertyResponse.ImageInfo updateImage(Long propertyId, Long imageId, MultipartFile file);
+
+    // Xóa một ảnh cụ thể.
+    void deleteImage(Long propertyId, Long imageId);
 
     // Lấy danh sách property tương tự (cùng khu vực).
     List<PropertyResponse> getSimilarProperties(Long id, int limit);

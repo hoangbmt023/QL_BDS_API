@@ -16,8 +16,11 @@ public class SlugService implements SlugServiceImpl{
             throw new InvalidResourceException("Input", "không được để trống để tạo slug");
         }
 
+        // Thay thế Đ/đ
+        String temp = input.replace("Đ", "d").replace("đ", "d");
+
         // 1. Chuẩn hóa unicode, loại bỏ dấu tiếng Việt
-        String normalized = Normalizer.normalize(input, Normalizer.Form.NFD)
+        String normalized = Normalizer.normalize(temp, Normalizer.Form.NFD)
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
 
         // 2. Chuyển sang lowercase, thay ký tự không phải a-z,0-9 thành "-"

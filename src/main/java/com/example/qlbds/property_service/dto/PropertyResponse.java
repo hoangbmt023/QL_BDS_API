@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Response trả về thông tin bất động sản.
@@ -41,6 +42,8 @@ public class PropertyResponse {
 
     // Chỉ hiển thị khi có lý do (bị từ chối hoặc ẩn bài)
     private String rejectionReason;
+
+    private List<ImageInfo> images;
 
     private OwnerInfo owner;
     private AgentInfo agent;
@@ -75,5 +78,16 @@ public class PropertyResponse {
         private String licenseNumber;
         private Double rating;
         private String slug;
+    }
+
+    // ── Thông tin hình ảnh ────────────────────────────────────
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ImageInfo {
+        private Long id;
+        private String imageUrl;
+        private Boolean isMain;
     }
 }
