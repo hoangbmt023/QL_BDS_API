@@ -37,8 +37,7 @@ public class PropertyResponse {
 
     private PropertyStatus status;
     private Boolean visibility;
-    private Integer viewCount;
-    private Integer favoriteCount;
+    private StatsInfo stats;
 
     // Chỉ hiển thị khi có lý do (bị từ chối hoặc ẩn bài)
     private String rejectionReason;
@@ -89,5 +88,15 @@ public class PropertyResponse {
         private Long id;
         private String imageUrl;
         private Boolean isMain;
+    }
+
+    // ── Thông tin thống kê (stats) ────────────────────────────
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class StatsInfo {
+        private Integer viewCount;
+        private Integer favoriteCount;
     }
 }
