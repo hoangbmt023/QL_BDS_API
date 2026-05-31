@@ -37,6 +37,9 @@ public interface PropertyRepository extends JpaRepository<Property, Long>, JpaSp
     // Tìm theo ID bất kể visibility nhưng phải chưa bị xóa
     Optional<Property> findByIdAndIsDeletedFalse(Long id);
 
+    // Kiểm tra property tồn tại hay không
+    boolean existsByIdAndIsDeletedFalse(Long id);
+
     // Lấy tất cả property của một Owner (bao gồm cả đã xóa để khôi phục)
     List<Property> findAllByOwner(Owner owner);
 
@@ -45,5 +48,6 @@ public interface PropertyRepository extends JpaRepository<Property, Long>, JpaSp
 
     // Gợi ý property tương tự (cùng district, city, giới hạn số lượng)
     @Query("SELECT p FROM Property p WHERE p.city = :city AND p.district = :district AND p.id != :id AND p.visibility = true AND p.isDeleted = false")
-    Page<Property> findSimilarProperties(@Param("city") String city, @Param("district") String district, @Param("id") Long id, Pageable pageable);
+    Page<Property> findSimilarProperties(@Param("city") String city, @Param("district") String district,
+            @Param("id") Long id, Pageable pageable);
 }
