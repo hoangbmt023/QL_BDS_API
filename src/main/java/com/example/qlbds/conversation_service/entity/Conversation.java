@@ -53,4 +53,14 @@ public class Conversation {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @org.hibernate.annotations.UpdateTimestamp
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Column(name = "last_message_id")
+    private Long lastMessageId;
+
+    @Column(name = "last_message_at")
+    private LocalDateTime lastMessageAt;
 }
