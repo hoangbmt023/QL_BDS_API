@@ -82,7 +82,7 @@ public class ConversationServiceImpl implements ConversationService {
 
         return PageResponse.<ConversationResponse>builder()
                 .data(data)
-                .currentPage(conversations.getNumber())
+                .currentPage(conversations.getNumber() + 1)
                 .pageSize(conversations.getSize())
                 .totalElements(conversations.getTotalElements())
                 .totalPages(conversations.getTotalPages())
@@ -170,7 +170,7 @@ public class ConversationServiceImpl implements ConversationService {
 
         return PageResponse.<MessageResponse>builder()
                 .data(data)
-                .currentPage(messages.getNumber())
+                .currentPage(messages.getNumber() + 1)
                 .pageSize(messages.getSize())
                 .totalElements(messages.getTotalElements())
                 .totalPages(messages.getTotalPages())
@@ -216,19 +216,83 @@ public class ConversationServiceImpl implements ConversationService {
         return new UnreadCountResponse(unreadCount != null ? unreadCount : 0L);
     }
 
+    @Override
+    @Transactional
+    public MessageResponse editMessage(Long messageId, MessageRequest request) {
+        User currentUser = currentUserService.getCurrentUser();
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin nhắn."));
+
+        if (!message.getSender().getId().equals(currentUser.getId())) {
+            throw new InvalidResourceException("Bạn chỉ có thể sửa tin nhắn của chính mình.");
+        }
+
+        if (message.getIsRecalled() != null && message.getIsRecalled()) {
+            throw new InvalidResourceException("Không thể sửa tin nhắn đã thu hồi.");
+        }
+
+        message.setContent(request.getContent());
+        message.setIsEdited(true);
+        message = messageRepository.save(message);
+
+        MessageResponse response = messageMapper.toResponse(message);
+
+        // Push update to recipient
+        Conversation conversation = message.getConversation();
+        User recipient = conversation.getUserOne().getId().equals(currentUser.getId()) ? conversation.getUserTwo() : conversation.getUserOne();
+        messagingTemplate.convertAndSendToUser(
+                recipient.getUsername(),
+                "/queue/messages/update",
+                response
+        );
+
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public MessageResponse recallMessage(Long messageId) {
+        User currentUser = currentUserService.getCurrentUser();
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin nhắn."));
+
+        if (!message.getSender().getId().equals(currentUser.getId())) {
+            throw new InvalidResourceException("Bạn chỉ có thể thu hồi tin nhắn của chính mình.");
+        }
+
+        if (message.getIsRecalled() != null && message.getIsRecalled()) {
+            throw new InvalidResourceException("Tin nhắn này đã được thu hồi.");
+        }
+
+        message.setContent("Tin nhắn đã bị thu hồi");
+        message.setIsRecalled(true);
+        message = messageRepository.save(message);
+
+        MessageResponse response = messageMapper.toResponse(message);
+
+        // Push update to recipient
+        Conversation conversation = message.getConversation();
+        User recipient = conversation.getUserOne().getId().equals(currentUser.getId()) ? conversation.getUserTwo() : conversation.getUserOne();
+        messagingTemplate.convertAndSendToUser(
+                recipient.getUsername(),
+                "/queue/messages/update",
+                response
+        );
+
+        return response;
+    }
+
     private ConversationResponse mapToResponse(Conversation conversation, User currentUser) {
         Long unreadCount = messageRepository.countUnreadMessagesInConversation(conversation, currentUser);
         String lastMessageContent = null;
+        Long lastMessageSenderId = null;
         if (conversation.getLastMessageId() != null) {
             Message lastMsg = messageRepository.findById(conversation.getLastMessageId()).orElse(null);
             if (lastMsg != null) {
-                if (lastMsg.getSender().getId().equals(currentUser.getId())) {
-                    lastMessageContent = "Bạn: " + lastMsg.getContent();
-                } else {
-                    lastMessageContent = lastMsg.getContent();
-                }
+                lastMessageContent = lastMsg.getContent();
+                lastMessageSenderId = lastMsg.getSender().getId();
             }
         }
-        return conversationMapper.toResponse(conversation, currentUser, unreadCount, lastMessageContent);
+        return conversationMapper.toResponse(conversation, currentUser, unreadCount, lastMessageContent, lastMessageSenderId);
     }
 }

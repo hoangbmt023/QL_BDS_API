@@ -53,7 +53,7 @@ public class PropertyController {
     // Lấy danh sách bất động sản với phân trang và lọc (Public)
     @GetMapping
     @Operation(summary = "Lấy danh sách bất động sản (lọc động + phân trang)")
-    public ResponseEntity<ApiResponse<PageResponse<PropertyResponse>>> findAll(
+    public ResponseEntity<ApiResponse<List<PropertyResponse>>> findAll(
             @RequestParam(name = "search", required = false) String search,
             @RequestParam(name = "city", required = false) String city,
             @RequestParam(name = "district", required = false) String district,
@@ -68,7 +68,7 @@ public class PropertyController {
         int pageIndex = page > 0 ? page - 1 : 0;
         PageResponse<PropertyResponse> result = propertyService.findAll(
                 search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, pageIndex, size, true, null);
-        return ResponseEntity.ok(ApiResponse.success(result, "Lấy danh sách bất động sản thành công"));
+        return ResponseEntity.ok(ApiResponse.paginatedSuccess(result, "Lấy danh sách bất động sản thành công"));
     }
 
     // Lấy danh sách bất động sản của chính mình (Owner/Agent)
@@ -76,7 +76,7 @@ public class PropertyController {
     @PreAuthorize("hasAnyRole('OWNER', 'AGENT')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Lấy danh sách bất động sản của tôi (Owner/Agent)")
-    public ResponseEntity<ApiResponse<PageResponse<PropertyResponse>>> findMyProperties(
+    public ResponseEntity<ApiResponse<List<PropertyResponse>>> findMyProperties(
             @RequestParam(name = "search", required = false) String search,
             @RequestParam(name = "city", required = false) String city,
             @RequestParam(name = "district", required = false) String district,
@@ -94,7 +94,7 @@ public class PropertyController {
         PageResponse<PropertyResponse> result = propertyService.findAll(
                 search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, pageIndex, size, false,
                 currentUser.getId());
-        return ResponseEntity.ok(ApiResponse.success(result, "Lấy danh sách bất động sản của tôi thành công"));
+        return ResponseEntity.ok(ApiResponse.paginatedSuccess(result, "Lấy danh sách bất động sản của tôi thành công"));
     }
 
     // Lấy danh sách tất cả bất động sản cho Admin/Moderator (không quan tâm
@@ -103,7 +103,7 @@ public class PropertyController {
     @PreAuthorize("hasAnyRole('MODERATOR', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Lấy tất cả danh sách bất động sản cho Admin/Moderator duyệt")
-    public ResponseEntity<ApiResponse<PageResponse<PropertyResponse>>> findAllForAdmin(
+    public ResponseEntity<ApiResponse<List<PropertyResponse>>> findAllForAdmin(
             @RequestParam(name = "search", required = false) String search,
             @RequestParam(name = "city", required = false) String city,
             @RequestParam(name = "district", required = false) String district,
@@ -118,7 +118,7 @@ public class PropertyController {
         int pageIndex = page > 0 ? page - 1 : 0;
         PageResponse<PropertyResponse> result = propertyService.findAll(
                 search, city, district, minPrice, maxPrice, bedrooms, bathrooms, status, pageIndex, size, false, null);
-        return ResponseEntity.ok(ApiResponse.success(result, "Lấy danh sách bất động sản thành công"));
+        return ResponseEntity.ok(ApiResponse.paginatedSuccess(result, "Lấy danh sách bất động sản thành công"));
     }
 
     // Lấy chi tiết bất động sản theo Slug (Public)

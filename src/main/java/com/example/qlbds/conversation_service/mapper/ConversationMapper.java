@@ -19,7 +19,7 @@ public abstract class ConversationMapper {
     @Autowired
     protected UserResponseMapper userResponseMapper;
 
-    public ConversationResponse toResponse(Conversation conversation, User currentUser, Long unreadCount, String lastMessage) {
+    public ConversationResponse toResponse(Conversation conversation, User currentUser, Long unreadCount, String lastMessage, Long lastMessageSenderId) {
         if (conversation == null) {
             return null;
         }
@@ -37,6 +37,7 @@ public abstract class ConversationMapper {
         ));
 
         response.setLastMessage(lastMessage);
+        response.setLastMessageSenderId(lastMessageSenderId);
         response.setLastMessageAt(conversation.getLastMessageAt());
         response.setUnreadCount(unreadCount);
 
