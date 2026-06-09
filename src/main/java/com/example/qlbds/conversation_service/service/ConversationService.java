@@ -11,4 +11,8 @@ public interface ConversationService {
     PageResponse<MessageResponse> getConversationMessages(Long conversationId, int page, int size);
     void markAsRead(Long conversationId);
     UnreadCountResponse getUnreadCount();
+
+    MessageResponse editMessage(Long messageId, MessageRequest request);
+
+    MessageResponse recallMessage(Long messageId);
 }

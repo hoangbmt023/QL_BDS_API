@@ -13,6 +13,7 @@ public class ConversationResponse {
     private UserSummaryResponse otherParticipant;
     private List<UserSummaryResponse> participants;
     private String lastMessage;
+    private Long lastMessageSenderId;
     private LocalDateTime lastMessageAt;
     private Long unreadCount;
 }

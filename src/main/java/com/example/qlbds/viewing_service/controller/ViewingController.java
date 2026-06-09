@@ -2,6 +2,7 @@ package com.example.qlbds.viewing_service.controller;
 
 import com.example.qlbds.common.response.PageResponse;
 import com.example.qlbds.shared.dto.ApiResponse;
+import java.util.List;
 import com.example.qlbds.viewing_service.dto.ViewingCreateRequest;
 import com.example.qlbds.viewing_service.dto.ViewingResponse;
 import com.example.qlbds.viewing_service.dto.ViewingStatusRequest;
@@ -48,7 +49,7 @@ public class ViewingController {
     @PreAuthorize("isAuthenticated()")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Lấy danh sách lịch xem của người dùng hiện tại")
-    public ResponseEntity<ApiResponse<PageResponse<ViewingResponse>>> getMyViewings(
+    public ResponseEntity<ApiResponse<List<ViewingResponse>>> getMyViewings(
             @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
             @RequestParam(name = "size", defaultValue = "20") @Min(1) int size,
             @RequestParam(required = false) ViewingStatus status,
@@ -57,14 +58,14 @@ public class ViewingController {
         
         int pageIndex = page > 0 ? page - 1 : 0;
         PageResponse<ViewingResponse> response = viewingService.getMyViewings(pageIndex, size, status, upcoming, sort);
-        return ResponseEntity.ok(ApiResponse.success(response, "Lấy danh sách lịch xem thành công"));
+        return ResponseEntity.ok(ApiResponse.paginatedSuccess(response, "Lấy danh sách lịch xem thành công"));
     }
 
     @GetMapping("/managed")
     @PreAuthorize("hasAnyRole('OWNER', 'AGENT')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Lấy danh sách lịch hẹn của các bất động sản do mình quản lý (Agent/Owner)")
-    public ResponseEntity<ApiResponse<PageResponse<ViewingResponse>>> getManagedViewings(
+    public ResponseEntity<ApiResponse<List<ViewingResponse>>> getManagedViewings(
             @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
             @RequestParam(name = "size", defaultValue = "20") @Min(1) int size,
             @RequestParam(required = false) ViewingStatus status,
@@ -73,7 +74,7 @@ public class ViewingController {
         
         int pageIndex = page > 0 ? page - 1 : 0;
         PageResponse<ViewingResponse> response = viewingService.getManagedViewings(pageIndex, size, status, upcoming, sort);
-        return ResponseEntity.ok(ApiResponse.success(response, "Lấy danh sách lịch hẹn cần quản lý thành công"));
+        return ResponseEntity.ok(ApiResponse.paginatedSuccess(response, "Lấy danh sách lịch hẹn cần quản lý thành công"));
     }
 
     @GetMapping("/{id}")

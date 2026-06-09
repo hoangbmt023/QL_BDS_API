@@ -11,4 +11,7 @@ public class MessageResponse {
     private String content;
     private Boolean isRead;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private Boolean isEdited;
+    private Boolean isRecalled;
 }
