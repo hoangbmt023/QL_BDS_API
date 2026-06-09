@@ -17,4 +17,6 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
 
     @Query("SELECT c FROM Conversation c WHERE c.userOne = :user OR c.userTwo = :user ORDER BY c.lastMessageAt DESC NULLS LAST")
     Page<Conversation> findByUserOrderByLastMessageAtDesc(@Param("user") User user, Pageable pageable);
+
+    int countByPropertyId(Long propertyId);
 }

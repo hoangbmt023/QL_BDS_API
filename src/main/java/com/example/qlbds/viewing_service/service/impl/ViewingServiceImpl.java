@@ -50,7 +50,7 @@ public class ViewingServiceImpl implements ViewingService {
     public ViewingResponse createViewing(ViewingCreateRequest request) {
         User currentUser = currentUserService.getCurrentUser();
         
-        Property property = propertyRepository.findByIdAndIsDeletedFalse(request.getPropertyId())
+        Property property = propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(request.getPropertyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản với ID: " + request.getPropertyId()));
                 
         boolean isPropertyOwner = property.getOwner() != null && 

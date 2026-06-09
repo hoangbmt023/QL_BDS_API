@@ -20,6 +20,8 @@ import com.example.qlbds.user_service.entity.Agent;
 import com.example.qlbds.user_service.entity.Owner;
 import com.example.qlbds.user_service.repository.AgentRepository;
 import com.example.qlbds.user_service.repository.OwnerRepository;
+import com.example.qlbds.viewing_service.repository.ViewingRepository;
+import com.example.qlbds.conversation_service.repository.ConversationRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +52,8 @@ public class PropertyServiceImpl implements PropertyService {
     private final OwnerRepository ownerRepository;
     private final AgentRepository agentRepository;
     private final SlugService slugService;
+    private final ViewingRepository viewingRepository;
+    private final ConversationRepository conversationRepository;
 
     // Tạo bất động sản mới — mặc định PENDING, chờ Moderator duyệt
     @Override
@@ -119,19 +123,29 @@ public class PropertyServiceImpl implements PropertyService {
 
     // Lấy chi tiết một bất động sản (chỉ hiển thị bài đã duyệt và chưa xóa)
     @Override
+    @Transactional
     public PropertyResponse findById(Long id) {
-        return propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(id)
-                .map(propertyMapper::toResponse)
+        Property property = propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Property", id));
+        
+        property.setViewCount(property.getViewCount() + 1);
+        propertyRepository.save(property);
+        
+        return propertyMapper.toResponse(property);
     }
 
     // Lấy chi tiết một bất động sản theo Slug (chỉ hiển thị bài đã duyệt và chưa
     // xóa)
     @Override
+    @Transactional
     public PropertyResponse findBySlug(String slug) {
-        return propertyRepository.findBySlugAndVisibilityTrueAndIsDeletedFalse(slug)
-                .map(propertyMapper::toResponse)
+        Property property = propertyRepository.findBySlugAndVisibilityTrueAndIsDeletedFalse(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Property có slug không tồn tại: " + slug));
+
+        property.setViewCount(property.getViewCount() + 1);
+        propertyRepository.save(property);
+        
+        return propertyMapper.toResponse(property);
     }
 
     // Cập nhật thông tin — tự động reset về PENDING để duyệt lại
@@ -263,7 +277,7 @@ public class PropertyServiceImpl implements PropertyService {
         Property property = findPropertyById(id);
         Pageable pageable = PageRequest.of(0, limit);
         return propertyRepository
-                .findSimilarProperties(property.getCity(), property.getDistrict(), id, pageable)
+                .findSimilarProperties(property.getCity(), property.getDistrict(), property.getPrice(), property.getArea(), id, pageable)
                 .map(propertyMapper::toResponse)
                 .getContent();
     }
@@ -299,9 +313,8 @@ public class PropertyServiceImpl implements PropertyService {
     public PropertyAnalyticsResponse getAnalytics(Long id) {
         Property property = findPropertyById(id);
 
-        // TODO: thay mock bằng query thực khi có ViewingService & ConversationService
-        int viewings = 0;
-        int convos = 0;
+        int viewings = viewingRepository.countByPropertyIdAndIsDeletedFalse(id);
+        int convos = conversationRepository.countByPropertyId(id);
         double conversionRate = 0.0;
         if (property.getViewCount() != null && property.getViewCount() > 0) {
             conversionRate = ((double) viewings / property.getViewCount()) * 100.0;

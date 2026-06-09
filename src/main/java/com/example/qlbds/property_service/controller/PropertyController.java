@@ -97,12 +97,12 @@ public class PropertyController {
         return ResponseEntity.ok(ApiResponse.paginatedSuccess(result, "Lấy danh sách bất động sản của tôi thành công"));
     }
 
-    // Lấy danh sách tất cả bất động sản cho Admin/Moderator (không quan tâm
+    // Lấy danh sách tất cả bất động sản cho Admin (không quan tâm
     // visibility)
     @GetMapping("/admin")
-    @PreAuthorize("hasAnyRole('MODERATOR', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Lấy tất cả danh sách bất động sản cho Admin/Moderator duyệt")
+    @Operation(summary = "Lấy tất cả danh sách bất động sản cho Admin duyệt")
     public ResponseEntity<ApiResponse<List<PropertyResponse>>> findAllForAdmin(
             @RequestParam(name = "search", required = false) String search,
             @RequestParam(name = "city", required = false) String city,
@@ -190,6 +190,7 @@ public class PropertyController {
     }
 
     // Gợi ý property tương tự (Public)
+    // Cùng loại -> Cùng quận -> Giá gần -> Diện tích gần
     @GetMapping("/{id}/similar")
     @Operation(summary = "Gợi ý bất động sản tương tự")
     public ResponseEntity<ApiResponse<List<PropertyResponse>>> getSimilarProperties(
@@ -199,11 +200,11 @@ public class PropertyController {
         return ResponseEntity.ok(ApiResponse.success(similar, "Lấy danh sách gợi ý thành công"));
     }
 
-    // Đổi trạng thái property — chỉ MODERATOR hoặc ADMIN
+    // Đổi trạng thái property — chỉ ADMIN
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('MODERATOR', 'ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Cập nhật trạng thái (APPROVED, REJECTED, HIDDEN...) — Moderator/Admin")
+    @Operation(summary = "Cập nhật trạng thái (APPROVED, REJECTED, HIDDEN...) — Admin")
     public ResponseEntity<ApiResponse<PropertyResponse>> changeStatus(
             @PathVariable Long id,
             @RequestParam("status") PropertyStatus status,
@@ -212,9 +213,9 @@ public class PropertyController {
         return ResponseEntity.ok(ApiResponse.success(updated, "Cập nhật trạng thái thành công"));
     }
 
-    // Thống kê hiệu quả listing — ADMIN, MODERATOR, OWNER, AGENT
+    // Thống kê hiệu quả listing — ADMIN, OWNER, AGENT
     @GetMapping("/{id}/analytics")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR', 'OWNER', 'AGENT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'AGENT')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Thống kê hiệu quả listing")
     public ResponseEntity<ApiResponse<PropertyAnalyticsResponse>> getAnalytics(@PathVariable Long id) {
