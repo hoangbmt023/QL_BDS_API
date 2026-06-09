@@ -2,6 +2,7 @@ package com.example.qlbds.favorite_service.controller;
 
 import com.example.qlbds.common.response.PageResponse;
 import com.example.qlbds.favorite_service.service.FavoriteService;
+import java.util.List;
 import com.example.qlbds.shared.dto.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -81,12 +82,12 @@ public class FavoriteController {
     @PreAuthorize("isAuthenticated()")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Lấy danh sách bất động sản yêu thích của tôi")
-    public ResponseEntity<ApiResponse<PageResponse<FavoriteResponse>>> getMyFavorites(
+    public ResponseEntity<ApiResponse<List<FavoriteResponse>>> getMyFavorites(
             @RequestParam(name = "page", defaultValue = "1") @Min(1) int page,
             @RequestParam(name = "size", defaultValue = "20") @Min(1) int size) {
 
         int pageIndex = page > 0 ? page - 1 : 0;
         PageResponse<FavoriteResponse> response = favoriteService.getMyFavorites(pageIndex, size);
-        return ResponseEntity.ok(ApiResponse.success(response, "Lấy danh sách yêu thích thành công"));
+        return ResponseEntity.ok(ApiResponse.paginatedSuccess(response, "Lấy danh sách yêu thích thành công"));
     }
 }

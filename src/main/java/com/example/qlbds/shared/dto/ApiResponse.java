@@ -5,15 +5,22 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.example.qlbds.common.response.PageResponse;
+import com.example.qlbds.common.response.PaginationMeta;
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
 
     private boolean success;
     private String message;
     private T data;
+    private PaginationMeta pagination;
     private String errorCode;
 
     public static <T> ApiResponse<T> success(T data) {
@@ -36,6 +43,23 @@ public class ApiResponse<T> {
                 .success(true)
                 .message(message)
                 .data(data)
+                .build();
+    }
+
+    public static <T> ApiResponse<List<T>> paginatedSuccess(PageResponse<T> pageResponse, String message) {
+        PaginationMeta meta = PaginationMeta.builder()
+                .currentPage(pageResponse.getCurrentPage())
+                .pageSize(pageResponse.getPageSize())
+                .totalElements(pageResponse.getTotalElements())
+                .totalPages(pageResponse.getTotalPages())
+                .last(pageResponse.isLast())
+                .build();
+                
+        return ApiResponse.<List<T>>builder()
+                .success(true)
+                .message(message)
+                .data(pageResponse.getData())
+                .pagination(meta)
                 .build();
     }
 
