@@ -9,6 +9,7 @@ import com.example.qlbds.common.exception.InvalidResourceException;
 import com.example.qlbds.common.exception.ResourceNotFoundException;
 import com.example.qlbds.common.util.SlugUtil;
 import com.example.qlbds.config.CurrentUserService;
+import com.example.qlbds.shared.entity.enums.PropertyStatus;
 import com.example.qlbds.shared.entity.enums.UserRole;
 import com.example.qlbds.user_service.dto.AdminChangeRoleRequest;
 import com.example.qlbds.user_service.dto.UpdateProfileRequest;
@@ -152,6 +153,8 @@ public class UserServiceImpl implements UserService {
             // Xóa luôn các Property do Agent này quản lý
             propertyRepository.findAllByAgent(agent).forEach(p -> {
                 p.setIsDeleted(true);
+                p.setStatus(PropertyStatus.DELETED);
+                p.setVisibility(false);
                 propertyRepository.save(p);
             });
         });
@@ -161,6 +164,8 @@ public class UserServiceImpl implements UserService {
             // Xóa luôn các Property của Owner này
             propertyRepository.findAllByOwner(owner).forEach(p -> {
                 p.setIsDeleted(true);
+                p.setStatus(PropertyStatus.DELETED);
+                p.setVisibility(false);
                 propertyRepository.save(p);
             });
         });
@@ -199,6 +204,8 @@ public class UserServiceImpl implements UserService {
                 // Khôi phục các Property liên quan
                 propertyRepository.findAllByAgent(agent).forEach(p -> {
                     p.setIsDeleted(false);
+                    p.setStatus(PropertyStatus.PENDING);
+                    p.setVisibility(false);
                     propertyRepository.save(p);
                 });
             });
@@ -209,6 +216,8 @@ public class UserServiceImpl implements UserService {
                 // Khôi phục các Property liên quan
                 propertyRepository.findAllByOwner(owner).forEach(p -> {
                     p.setIsDeleted(false);
+                    p.setStatus(PropertyStatus.PENDING);
+                    p.setVisibility(false);
                     propertyRepository.save(p);
                 });
             });

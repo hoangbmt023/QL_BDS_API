@@ -41,7 +41,7 @@ public class FavoriteServiceImpl implements FavoriteService {
         Long propertyId = request.getPropertyId();
         User currentUser = currentUserService.getCurrentUser();
 
-        Property property = propertyRepository.findByIdAndIsDeletedFalse(propertyId)
+        Property property = propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(propertyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản với ID: " + propertyId));
 
         if (favoriteRepository.existsByUserAndProperty(currentUser, property)) {
@@ -74,7 +74,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     public FavoriteActionResponse removeFavorite(Long propertyId) {
         User currentUser = currentUserService.getCurrentUser();
 
-        Property property = propertyRepository.findByIdAndIsDeletedFalse(propertyId)
+        Property property = propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(propertyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản với ID: " + propertyId));
 
         Favorite favorite = favoriteRepository.findByUserAndProperty(currentUser, property)
@@ -150,7 +150,7 @@ public class FavoriteServiceImpl implements FavoriteService {
     public FavoriteActionResponse checkFavorite(Long propertyId) {
         User currentUser = currentUserService.getCurrentUser();
 
-        Property property = propertyRepository.findByIdAndIsDeletedFalse(propertyId)
+        Property property = propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(propertyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bất động sản với ID: " + propertyId));
 
         boolean isFavorite = favoriteRepository.existsByUserAndProperty(currentUser, property);
