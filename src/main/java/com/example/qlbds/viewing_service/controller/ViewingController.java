@@ -61,7 +61,7 @@ public class ViewingController {
     }
 
     @GetMapping("/managed")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('OWNER', 'AGENT')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Lấy danh sách lịch hẹn của các bất động sản do mình quản lý (Agent/Owner)")
     public ResponseEntity<ApiResponse<PageResponse<ViewingResponse>>> getManagedViewings(
