@@ -1,5 +1,6 @@
 package com.example.qlbds.property_service.repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,8 +47,24 @@ public interface PropertyRepository extends JpaRepository<Property, Long>, JpaSp
     // Lấy tất cả property của một Agent (bao gồm cả đã xóa để khôi phục)
     List<Property> findAllByAgent(Agent agent);
 
-    // Gợi ý property tương tự (cùng district, city, giới hạn số lượng)
-    @Query("SELECT p FROM Property p WHERE p.city = :city AND p.district = :district AND p.id != :id AND p.visibility = true AND p.isDeleted = false")
-    Page<Property> findSimilarProperties(@Param("city") String city, @Param("district") String district,
-            @Param("id") Long id, Pageable pageable);
+    // Gợi ý property tương tự theo thành phố, xếp hạng ưu tiên: cùng quận -> giá
+    // gần -> diện tích gần
+    @Query("""
+            SELECT p FROM Property p
+            WHERE p.city = :city
+              AND p.id != :id
+              AND p.visibility = true
+              AND p.isDeleted = false
+            ORDER BY
+              CASE WHEN p.district = :district THEN 0 ELSE 1 END,
+              ABS(p.price - :price),
+              ABS(COALESCE(p.area, 0.0) - COALESCE(:area, 0.0))
+            """)
+    Page<Property> findSimilarProperties(
+            @Param("city") String city,
+            @Param("district") String district,
+            @Param("price") BigDecimal price,
+            @Param("area") Double area,
+            @Param("id") Long id,
+            Pageable pageable);
 }

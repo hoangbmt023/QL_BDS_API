@@ -70,4 +70,6 @@ public interface ViewingRepository extends JpaRepository<Viewing, Long> {
     
     List<Viewing> findByPropertyIdAndScheduledTimeBetweenAndStatusInAndIsDeletedFalse(
             Long propertyId, LocalDateTime start, LocalDateTime end, List<ViewingStatus> statuses);
+
+    int countByPropertyIdAndIsDeletedFalse(Long propertyId);
 }

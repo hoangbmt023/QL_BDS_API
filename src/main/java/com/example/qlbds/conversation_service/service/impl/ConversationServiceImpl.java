@@ -44,7 +44,7 @@ public class ConversationServiceImpl implements ConversationService {
     @Transactional
     public ConversationResponse getOrCreateConversation(ConversationCreateRequest request) {
         User currentUser = currentUserService.getCurrentUser();
-        Property property = propertyRepository.findByIdAndIsDeletedFalse(request.getPropertyId())
+        Property property = propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(request.getPropertyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Bất động sản không tồn tại."));
 
         User ownerOrAgent = property.getAgent() != null ? property.getAgent().getUser() : property.getOwner().getUser();
