@@ -33,26 +33,36 @@ public interface ViewingRepository extends JpaRepository<Viewing, Long> {
             @Param("excludeId") Long excludeId);
 
     @Query("SELECT v FROM Viewing v WHERE v.user = :user AND v.isDeleted = false " +
-           "AND (:status IS NULL OR v.status = :status) " +
+           "AND (:hasStatus = false OR v.status = :status) " +
            "AND (:upcoming = false OR v.scheduledTime >= :now)")
     Page<Viewing> findMyViewingsFiltered(@Param("user") User user, 
                                          @Param("status") ViewingStatus status, 
+                                         @Param("hasStatus") boolean hasStatus,
                                          @Param("upcoming") boolean upcoming, 
                                          @Param("now") LocalDateTime now,
                                          Pageable pageable);
 
-    @Query("SELECT v FROM Viewing v WHERE v.isDeleted = false AND " +
-           "(v.property.owner.user = :user OR v.property.agent.user = :user) " +
-           "AND (:status IS NULL OR v.status = :status) " +
+    @Query("SELECT v FROM Viewing v " +
+           "LEFT JOIN v.property p " +
+           "LEFT JOIN p.owner o " +
+           "LEFT JOIN p.agent a " +
+           "WHERE v.isDeleted = false AND " +
+           "(o.user = :user OR a.user = :user) " +
+           "AND (:hasStatus = false OR v.status = :status) " +
            "AND (:upcoming = false OR v.scheduledTime >= :now)")
     Page<Viewing> findManagedViewingsFiltered(@Param("user") User user, 
                                               @Param("status") ViewingStatus status, 
+                                              @Param("hasStatus") boolean hasStatus,
                                               @Param("upcoming") boolean upcoming, 
                                               @Param("now") LocalDateTime now,
                                               Pageable pageable);
 
-    @Query("SELECT v.status, COUNT(v) FROM Viewing v WHERE v.isDeleted = false AND " +
-           "(v.property.owner.user = :user OR v.property.agent.user = :user) GROUP BY v.status")
+    @Query("SELECT v.status, COUNT(v) FROM Viewing v " +
+           "LEFT JOIN v.property p " +
+           "LEFT JOIN p.owner o " +
+           "LEFT JOIN p.agent a " +
+           "WHERE v.isDeleted = false AND " +
+           "(o.user = :user OR a.user = :user) GROUP BY v.status")
     List<Object[]> countManagedViewingsByStatus(@Param("user") User user);
     
     @Query("SELECT v.status, COUNT(v) FROM Viewing v WHERE v.isDeleted = false AND v.user = :user GROUP BY v.status")
