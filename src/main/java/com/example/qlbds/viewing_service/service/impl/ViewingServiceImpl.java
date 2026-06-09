@@ -70,6 +70,14 @@ public class ViewingServiceImpl implements ViewingService {
             throw new InvalidResourceException("Thời gian xem nhà phải ở tương lai.");
         }
                 
+        LocalTime time = request.getScheduledTime().toLocalTime();
+        if (time.isBefore(LocalTime.of(8, 0)) || time.isAfter(LocalTime.of(17, 0))) {
+            throw new InvalidResourceException("Thời gian hẹn phải nằm trong giờ làm việc (08:00 - 17:00).");
+        }
+        if (time.getMinute() != 0 && time.getMinute() != 30) {
+            throw new InvalidResourceException("Thời gian hẹn phải chẵn theo mỗi 30 phút (VD: 08:00, 08:30).");
+        }
+                
         // Conflict validation: 30 minutes before and after
         LocalDateTime startTime = request.getScheduledTime().minusMinutes(30);
         LocalDateTime endTime = request.getScheduledTime().plusMinutes(30);
@@ -103,7 +111,8 @@ public class ViewingServiceImpl implements ViewingService {
         Pageable pageable = PageRequest.of(page, size, sort);
         LocalDateTime now = LocalDateTime.now();
         
-        Page<Viewing> viewingPage = viewingRepository.findMyViewingsFiltered(currentUser, status, upcoming, now, pageable);
+        ViewingStatus queryStatus = status != null ? status : ViewingStatus.PENDING;
+        Page<Viewing> viewingPage = viewingRepository.findMyViewingsFiltered(currentUser, queryStatus, status != null, upcoming, now, pageable);
         
         return PageResponse.from(viewingPage.map(viewingMapper::toResponse));
     }
@@ -116,7 +125,8 @@ public class ViewingServiceImpl implements ViewingService {
         Pageable pageable = PageRequest.of(page, size, sort);
         LocalDateTime now = LocalDateTime.now();
         
-        Page<Viewing> viewingPage = viewingRepository.findManagedViewingsFiltered(currentUser, status, upcoming, now, pageable);
+        ViewingStatus queryStatus = status != null ? status : ViewingStatus.PENDING;
+        Page<Viewing> viewingPage = viewingRepository.findManagedViewingsFiltered(currentUser, queryStatus, status != null, upcoming, now, pageable);
         
         return PageResponse.from(viewingPage.map(viewingMapper::toResponse));
     }
@@ -174,6 +184,14 @@ public class ViewingServiceImpl implements ViewingService {
         
         if (request.getScheduledTime().isBefore(LocalDateTime.now())) {
             throw new InvalidResourceException("Thời gian xem nhà phải ở tương lai.");
+        }
+        
+        LocalTime time = request.getScheduledTime().toLocalTime();
+        if (time.isBefore(LocalTime.of(8, 0)) || time.isAfter(LocalTime.of(17, 0))) {
+            throw new InvalidResourceException("Thời gian hẹn phải nằm trong giờ làm việc (08:00 - 17:00).");
+        }
+        if (time.getMinute() != 0 && time.getMinute() != 30) {
+            throw new InvalidResourceException("Thời gian hẹn phải chẵn theo mỗi 30 phút (VD: 08:00, 08:30).");
         }
         
         LocalDateTime startTime = request.getScheduledTime().minusMinutes(30);
@@ -260,6 +278,14 @@ public class ViewingServiceImpl implements ViewingService {
         
         if (viewing.getStatus() == ViewingStatus.CANCELLED || viewing.getStatus() == ViewingStatus.COMPLETED) {
             throw new InvalidResourceException("Không thể thay đổi trạng thái của lịch hẹn đã hoàn thành hoặc đã bị hủy.");
+        }
+        
+        if (request.getStatus() == ViewingStatus.CONFIRMED && viewing.getStatus() != ViewingStatus.PENDING) {
+            throw new InvalidResourceException("Chỉ có thể xác nhận (CONFIRMED) lịch hẹn đang ở trạng thái chờ (PENDING).");
+        }
+        
+        if (request.getStatus() == ViewingStatus.COMPLETED && viewing.getStatus() != ViewingStatus.CONFIRMED) {
+            throw new InvalidResourceException("Chỉ có thể hoàn thành (COMPLETED) lịch hẹn đã được xác nhận (CONFIRMED).");
         }
         
         viewing.setStatus(request.getStatus());

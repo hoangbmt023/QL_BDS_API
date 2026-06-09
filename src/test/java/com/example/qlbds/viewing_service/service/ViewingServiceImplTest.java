@@ -103,7 +103,7 @@ public class ViewingServiceImplTest {
     void createViewing_Fail_IsOwner() {
         ViewingCreateRequest request = new ViewingCreateRequest();
         request.setPropertyId(100L);
-        request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(10));
+        request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0));
 
         Owner owner = new Owner();
         owner.setUser(currentUser);
@@ -123,7 +123,7 @@ public class ViewingServiceImplTest {
     void createViewing_Fail_ConflictTime() {
         ViewingCreateRequest request = new ViewingCreateRequest();
         request.setPropertyId(100L);
-        request.setScheduledTime(LocalDateTime.now().plusDays(1));
+        request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0));
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
         when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
@@ -214,7 +214,7 @@ public class ViewingServiceImplTest {
     @DisplayName("Đổi giờ thành công khi không có xung đột")
     void rescheduleViewing_Success() {
         ViewingRescheduleRequest request = new ViewingRescheduleRequest();
-        request.setScheduledTime(LocalDateTime.now().plusDays(2).withHour(14));
+        request.setScheduledTime(LocalDateTime.now().plusDays(2).withHour(14).withMinute(0));
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
         when(viewingRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(viewing));
@@ -259,7 +259,7 @@ public class ViewingServiceImplTest {
     void createViewing_Fail_IsAgent() {
         ViewingCreateRequest request = new ViewingCreateRequest();
         request.setPropertyId(100L);
-        request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(10));
+        request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0));
         com.example.qlbds.user_service.entity.Agent agent = new com.example.qlbds.user_service.entity.Agent();
         agent.setUser(currentUser);
         property.setAgent(agent);
@@ -291,7 +291,7 @@ public class ViewingServiceImplTest {
     @DisplayName("Đổi giờ thất bại do bị conflict")
     void rescheduleViewing_Conflict_Fail() {
         ViewingRescheduleRequest request = new ViewingRescheduleRequest();
-        request.setScheduledTime(LocalDateTime.now().plusDays(2).withHour(14));
+        request.setScheduledTime(LocalDateTime.now().plusDays(2).withHour(14).withMinute(0));
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
         when(viewingRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(viewing));
@@ -403,7 +403,7 @@ public class ViewingServiceImplTest {
     void getManagedViewings_Success() {
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
         Page<Viewing> page = new PageImpl<>(List.of(viewing));
-        when(viewingRepository.findManagedViewingsFiltered(eq(currentUser), any(), anyBoolean(), any(), any()))
+        when(viewingRepository.findManagedViewingsFiltered(eq(currentUser), any(), anyBoolean(), anyBoolean(), any(), any()))
                 .thenReturn(page);
 
         PageResponse<ViewingResponse> res = viewingService.getManagedViewings(0, 20, null, false, null);
@@ -465,7 +465,7 @@ public class ViewingServiceImplTest {
     void rescheduleViewing_AfterCompleted_Fail() {
         viewing.setStatus(ViewingStatus.COMPLETED);
         ViewingRescheduleRequest request = new ViewingRescheduleRequest();
-        request.setScheduledTime(LocalDateTime.now().plusDays(2).withHour(14));
+        request.setScheduledTime(LocalDateTime.now().plusDays(2).withHour(14).withMinute(0));
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
         when(viewingRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(viewing));
 
@@ -478,7 +478,7 @@ public class ViewingServiceImplTest {
     void rescheduleViewing_AfterCancelled_Fail() {
         viewing.setStatus(ViewingStatus.CANCELLED);
         ViewingRescheduleRequest request = new ViewingRescheduleRequest();
-        request.setScheduledTime(LocalDateTime.now().plusDays(2).withHour(14));
+        request.setScheduledTime(LocalDateTime.now().plusDays(2).withHour(14).withMinute(0));
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
         when(viewingRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(viewing));
 
@@ -491,7 +491,7 @@ public class ViewingServiceImplTest {
     void rescheduleViewing_FromConfirmed_ResetToPending_Success() {
         viewing.setStatus(ViewingStatus.CONFIRMED);
         ViewingRescheduleRequest request = new ViewingRescheduleRequest();
-        request.setScheduledTime(LocalDateTime.now().plusDays(2).withHour(14));
+        request.setScheduledTime(LocalDateTime.now().plusDays(2).withHour(14).withMinute(0));
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
         when(viewingRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(viewing));
@@ -560,7 +560,7 @@ public class ViewingServiceImplTest {
     @DisplayName("Đổi giờ thất bại do không tìm thấy")
     void rescheduleViewing_NotFound() {
         ViewingRescheduleRequest request = new ViewingRescheduleRequest();
-        request.setScheduledTime(LocalDateTime.now().plusDays(2).withHour(14));
+        request.setScheduledTime(LocalDateTime.now().plusDays(2).withHour(14).withMinute(0));
         when(viewingRepository.findByIdAndIsDeletedFalse(999L)).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> viewingService.rescheduleViewing(999L, request));
     }
@@ -614,6 +614,7 @@ public class ViewingServiceImplTest {
         Owner owner = new Owner(); owner.setUser(ownerUser); property.setOwner(owner);
         when(currentUserService.getCurrentUser()).thenReturn(ownerUser);
         
+        viewing.setStatus(ViewingStatus.CONFIRMED); // Phải xác nhận trước mới được hoàn thành
         ViewingStatusRequest request = new ViewingStatusRequest(); request.setStatus(ViewingStatus.COMPLETED);
         when(viewingRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(viewing));
 
@@ -626,10 +627,195 @@ public class ViewingServiceImplTest {
     void getManagedViewings_Empty() {
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
         Page<Viewing> page = new PageImpl<>(Collections.emptyList());
-        when(viewingRepository.findManagedViewingsFiltered(eq(currentUser), any(), anyBoolean(), any(), any())).thenReturn(page);
+        when(viewingRepository.findManagedViewingsFiltered(eq(currentUser), any(), anyBoolean(), anyBoolean(), any(), any())).thenReturn(page);
         
-        PageResponse<ViewingResponse> res = viewingService.getManagedViewings(0, 20, null, false, null);
+        PageResponse<ViewingResponse> res = viewingService.getManagedViewings(0, 20, null, false, "scheduledTime,desc");
         assertNotNull(res);
         assertTrue(res.getData() == null || res.getData().isEmpty());
+    }
+
+    // --- BỔ SUNG CÁC TEST CASE ĐỂ TĂNG COVERAGE ---
+
+    @Test
+    @DisplayName("Lấy danh sách lịch xem của tôi thành công")
+    void getMyViewings_Success() {
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+        Page<Viewing> page = new PageImpl<>(List.of(viewing));
+        when(viewingRepository.findMyViewingsFiltered(eq(currentUser), any(), anyBoolean(), anyBoolean(), any(), any()))
+                .thenReturn(page);
+
+        PageResponse<ViewingResponse> res = viewingService.getMyViewings(0, 20, null, false, "scheduledTime,asc");
+        assertNotNull(res);
+        assertFalse(res.getData().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Lấy danh sách lịch xem của tôi rỗng")
+    void getMyViewings_Empty() {
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+        Page<Viewing> page = new PageImpl<>(Collections.emptyList());
+        when(viewingRepository.findMyViewingsFiltered(eq(currentUser), any(), anyBoolean(), anyBoolean(), any(), any()))
+                .thenReturn(page);
+
+        PageResponse<ViewingResponse> res = viewingService.getMyViewings(0, 20, ViewingStatus.CONFIRMED, true, "scheduledTime,desc");
+        assertNotNull(res);
+        assertTrue(res.getData().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Chủ nhà xác nhận lịch nhưng không phải trạng thái PENDING thì ném lỗi")
+    void updateViewingStatus_Confirm_NonPending_Fail() {
+        User ownerUser = new User(); ownerUser.setId(2L);
+        Owner owner = new Owner(); owner.setUser(ownerUser); property.setOwner(owner);
+        when(currentUserService.getCurrentUser()).thenReturn(ownerUser);
+        
+        viewing.setStatus(ViewingStatus.CONFIRMED);
+        ViewingStatusRequest request = new ViewingStatusRequest(); 
+        request.setStatus(ViewingStatus.CONFIRMED);
+        
+        when(viewingRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(viewing));
+
+        InvalidResourceException exception = assertThrows(InvalidResourceException.class, 
+            () -> viewingService.updateViewingStatus(10L, request));
+        assertTrue(exception.getMessage().contains("đang ở trạng thái chờ"));
+    }
+
+    @Test
+    @DisplayName("Chủ nhà hoàn thành lịch nhưng chưa xác nhận (từ PENDING) thì ném lỗi")
+    void updateViewingStatus_Completed_FromPending_Fail() {
+        User ownerUser = new User(); ownerUser.setId(2L);
+        Owner owner = new Owner(); owner.setUser(ownerUser); property.setOwner(owner);
+        when(currentUserService.getCurrentUser()).thenReturn(ownerUser);
+        
+        viewing.setStatus(ViewingStatus.PENDING);
+        ViewingStatusRequest request = new ViewingStatusRequest(); 
+        request.setStatus(ViewingStatus.COMPLETED);
+        
+        when(viewingRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(viewing));
+
+        InvalidResourceException exception = assertThrows(InvalidResourceException.class, 
+            () -> viewingService.updateViewingStatus(10L, request));
+        assertTrue(exception.getMessage().contains("đã được xác nhận"));
+    }
+
+    @Test
+    @DisplayName("Đặt lịch trước 8h sáng ném lỗi")
+    void createViewing_Fail_BeforeWorkingHour() {
+        ViewingCreateRequest request = new ViewingCreateRequest();
+        request.setPropertyId(100L);
+        request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(7).withMinute(0));
+
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+        when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
+
+        InvalidResourceException exception = assertThrows(InvalidResourceException.class, () -> viewingService.createViewing(request));
+        assertTrue(exception.getMessage().contains("trong giờ làm việc"));
+    }
+
+    @Test
+    @DisplayName("Đặt lịch sau 17h chiều ném lỗi")
+    void createViewing_Fail_AfterWorkingHour() {
+        ViewingCreateRequest request = new ViewingCreateRequest();
+        request.setPropertyId(100L);
+        request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(17).withMinute(30));
+
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+        when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
+
+        InvalidResourceException exception = assertThrows(InvalidResourceException.class, () -> viewingService.createViewing(request));
+        assertTrue(exception.getMessage().contains("trong giờ làm việc"));
+    }
+
+    @Test
+    @DisplayName("Đặt lịch phút không chẵn (10:15) ném lỗi")
+    void createViewing_Fail_InvalidMinute() {
+        ViewingCreateRequest request = new ViewingCreateRequest();
+        request.setPropertyId(100L);
+        request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(10).withMinute(15));
+
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+        when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
+
+        InvalidResourceException exception = assertThrows(InvalidResourceException.class, () -> viewingService.createViewing(request));
+        assertTrue(exception.getMessage().contains("chẵn theo mỗi 30 phút"));
+    }
+
+    @Test
+    @DisplayName("Đổi lịch sang ngoài giờ làm việc ném lỗi")
+    void rescheduleViewing_InvalidWorkingHour_Fail() {
+        ViewingRescheduleRequest request = new ViewingRescheduleRequest();
+        request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(18).withMinute(0));
+
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+        when(viewingRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(viewing));
+
+        InvalidResourceException exception = assertThrows(InvalidResourceException.class, () -> viewingService.rescheduleViewing(10L, request));
+        assertTrue(exception.getMessage().contains("trong giờ làm việc"));
+    }
+
+    @Test
+    @DisplayName("Đổi lịch sang phút không chẵn ném lỗi")
+    void rescheduleViewing_InvalidMinute_Fail() {
+        ViewingRescheduleRequest request = new ViewingRescheduleRequest();
+        request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(10).withMinute(45));
+
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+        when(viewingRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(viewing));
+
+        InvalidResourceException exception = assertThrows(InvalidResourceException.class, () -> viewingService.rescheduleViewing(10L, request));
+        assertTrue(exception.getMessage().contains("chẵn theo mỗi 30 phút"));
+    }
+
+    @Test
+    @DisplayName("Lấy danh sách giờ trống mà không truyền date (date null)")
+    void getAvailableSlots_NullDate() {
+        when(propertyRepository.existsByIdAndIsDeletedFalse(100L)).thenReturn(true);
+        when(viewingRepository.findByPropertyIdAndScheduledTimeBetweenAndStatusInAndIsDeletedFalse(
+                eq(100L), any(), any(), any())).thenReturn(Collections.emptyList());
+
+        AvailableSlotResponse response = viewingService.getAvailableSlots(100L, null);
+
+        assertNotNull(response);
+        assertEquals(LocalDate.now(), response.getDate());
+    }
+
+    @Test
+    @DisplayName("Môi giới xác nhận lịch thành công")
+    void updateViewingStatus_Agent_Confirm_Success() {
+        User agentUser = new User(); agentUser.setId(3L);
+        com.example.qlbds.user_service.entity.Agent agent = new com.example.qlbds.user_service.entity.Agent(); 
+        agent.setUser(agentUser); 
+        property.setAgent(agent);
+        when(currentUserService.getCurrentUser()).thenReturn(agentUser);
+        
+        viewing.setStatus(ViewingStatus.PENDING);
+        ViewingStatusRequest request = new ViewingStatusRequest(); 
+        request.setStatus(ViewingStatus.CONFIRMED);
+        
+        when(viewingRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(viewing));
+        when(viewingRepository.save(any(Viewing.class))).thenReturn(viewing);
+
+        viewingService.updateViewingStatus(10L, request);
+        assertEquals(ViewingStatus.CONFIRMED, viewing.getStatus());
+    }
+
+    @Test
+    @DisplayName("Môi giới hoàn thành lịch thành công")
+    void updateViewingStatus_Agent_Completed_Success() {
+        User agentUser = new User(); agentUser.setId(3L);
+        com.example.qlbds.user_service.entity.Agent agent = new com.example.qlbds.user_service.entity.Agent(); 
+        agent.setUser(agentUser); 
+        property.setAgent(agent);
+        when(currentUserService.getCurrentUser()).thenReturn(agentUser);
+        
+        viewing.setStatus(ViewingStatus.CONFIRMED);
+        ViewingStatusRequest request = new ViewingStatusRequest(); 
+        request.setStatus(ViewingStatus.COMPLETED);
+        
+        when(viewingRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(viewing));
+        when(viewingRepository.save(any(Viewing.class))).thenReturn(viewing);
+
+        viewingService.updateViewingStatus(10L, request);
+        assertEquals(ViewingStatus.COMPLETED, viewing.getStatus());
     }
 }
