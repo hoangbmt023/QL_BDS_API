@@ -31,52 +31,35 @@ Tạo database PostgreSQL cho ứng dụng:
 CREATE DATABASE bds_db;
 ```
 
-### Cấu Hình Application Properties
+### Cấu Hình Biến Môi Trường (.env)
 
-Chỉnh sửa file `src/main/resources/application.properties`:
+Dự án bảo mật các thông tin nhạy cảm (như mật khẩu, secret key) bằng cách tách chúng ra khỏi source code. Spring Boot sẽ tự động nạp các file `.env.*` tương ứng với Profile đang chạy.
+
+**1. Cấu hình cho máy tính cá nhân (Development):**
+
+Hãy tạo một file tên là `.env.development` ở ngay thư mục gốc của dự án (ngang hàng với `pom.xml`) với nội dung như sau:
 
 ```properties
-# Server
-server.port=8080
-server.servlet.context-path=/
+# Environment properties for Development
+DB_URL=jdbc:postgresql://localhost:5432/bds_db
+DB_USERNAME=postgres
+DB_PASSWORD=your_postgres_password
 
-# Database (PostgreSQL)
-spring.datasource.url=jdbc:postgresql://localhost:5432/bds_db
-spring.datasource.username=postgres
-spring.datasource.password=your_postgres_password
-spring.datasource.driver-class-name=org.postgresql.Driver
+JWT_SECRET=your_very_long_secret_key_that_should_be_at_least_256_bits_long
 
-# JPA/Hibernate
-spring.jpa.hibernate.ddl-auto=validate
-spring.jpa.show-sql=false
-spring.jpa.properties.hibernate.format_sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_app_password
 
-# Flyway Migrations
-spring.flyway.baselineOnMigrate=true
-spring.flyway.locations=classpath:db/migration
-
-# JWT Configuration
-jwt.secret=your_very_long_secret_key_that_should_be_at_least_256_bits_long_for_HS256
-jwt.expiration=3600000
-jwt.refresh-expiration=604800000
-
-# Mail Configuration (for OTP emails)
-spring.mail.host=smtp.gmail.com
-spring.mail.port=587
-spring.mail.username=your_email@gmail.com
-spring.mail.password=your_app_password
-spring.mail.properties.mail.smtp.auth=true
-spring.mail.properties.mail.smtp.starttls.enable=true
-
-# Cloudinary (Image Upload)
-cloudinary.cloud-name=your_cloud_name
-cloudinary.api-key=your_api_key
-cloudinary.api-secret=your_api_secret
-
-# WebSocket
-spring.websocket.enabled=true
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
+
+*(Lưu ý: Các file `.env.*` đã được cấu hình trong `.gitignore` để đảm bảo chúng sẽ không bao giờ bị đẩy lên GitHub).*
+
+**2. Cấu hình cho Server (Production):**
+
+Tương tự, tạo file `.env.production` chứa thông tin thật của Server. Để ứng dụng nạp file này, chỉ cần thêm flag `-Dspring.profiles.active=production` khi chạy.
 
 ### Chạy Ứng Dụng
 
