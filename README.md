@@ -109,77 +109,122 @@ java -jar target/QLBDS-0.0.1-SNAPSHOT.jar
 
 ## 🏗️ Kiến Trúc Dự Án
 
-Dự án sử dụng **Domain-Driven Design (DDD)** với các micro-service style packages. Mỗi domain có cấu trúc tương tự:
+Dự án sử dụng **Domain-Driven Design (DDD)** với các service layers tách biệt. Mỗi service có cấu trúc riêng:
 
 ```
 src/main/java/com/example/qlbds/
-├── auth_service/              # 🔐 Xác thực & JWT
+│
+├── auth_service/                  # 🔐 Xác thực & JWT
 │   ├── controller/
 │   ├── service/
+│   │   └── impl/
 │   ├── repository/
+│   │   └── impl/
 │   ├── entity/
 │   ├── dto/
-│   └── exception/
+│   ├── mapper/
+│   └── model/
 │
-├── user_service/              # 👥 Quản lý người dùng & vai trò
+├── user_service/                  # 👥 Quản lý người dùng & vai trò
 │   ├── controller/
 │   ├── service/
+│   │   └── impl/
 │   ├── repository/
 │   ├── entity/
 │   ├── dto/
 │   └── mapper/
 │
-├── property_service/          # 🏠 Quản lý bất động sản
+├── property_service/              # 🏠 Quản lý bất động sản
 │   ├── controller/
 │   ├── service/
+│   │   └── impl/
 │   ├── repository/
 │   ├── entity/
 │   ├── dto/
 │   ├── mapper/
 │   └── specification/
 │
-├── viewing_service/           # 📅 Quản lý lịch xem nhà
+├── viewing_service/               # 📅 Quản lý lịch xem nhà
 │   ├── controller/
 │   ├── service/
-│   ├── repository/
-│   ├── entity/
-│   └── dto/
-│
-├── conversation_service/      # 💬 Chat & Tin nhắn thời gian thực
-│   ├── controller/
-│   ├── service/
+│   │   └── impl/
 │   ├── repository/
 │   ├── entity/
 │   ├── dto/
-│   └── websocket/
+│   └── mapper/
 │
-├── favorite_service/          # ❤️ Danh sách yêu thích
+├── conversation_service/          # 💬 Chat & Tin nhắn thời gian thực
 │   ├── controller/
 │   ├── service/
+│   │   └── impl/
 │   ├── repository/
 │   ├── entity/
-│   └── dto/
+│   ├── dto/
+│   ├── mapper/
+│   └── websocket/
 │
-├── common/                    # 🔧 Exception handlers & utilities
+├── favorite_service/              # ❤️ Danh sách yêu thích
+│   ├── controller/
+│   ├── service/
+│   │   └── impl/
+│   ├── repository/
+│   ├── entity/
+│   ├── dto/
+│   └── mapper/
+│
+├── common/                        # 🔧 Shared utilities
 │   ├── exception/
 │   ├── response/
 │   └── util/
 │
-├── config/                    # ⚙️ Spring Configuration
-│   ├── SecurityConfiguration
-│   ├── WebSocketConfig
-│   ├── CloudinaryConfig
-│   ├── JwtService
-│   └── OpenApiConfig
+├── config/                        # ⚙️ Spring Configuration
+│   ├── security/
+│   ├── SecurityConfiguration.java
+│   ├── JwtService.java
+│   ├── WebSocketConfig.java
+│   ├── CloudinaryConfig.java
+│   ├── OpenApiConfig.java
+│   └── JacksonConfig.java
 │
-├── shared/                    # 📦 Shared code
+├── shared/                        # 📦 Cross-service shared code
 │   ├── entity/
+│   │   └── enums/
 │   ├── dto/
-│   ├── service/
-│   └── enums/
+│   └── service/
+│       └── impl/
 │
-└── QlbdsApplication.java      # Entry point
+└── QlbdsApplication.java          # 🚀 Entry point
 ```
+
+### Tóm Tắt Kiến Trúc
+
+**Layered Architecture:**
+```
+REST Controllers (Endpoints)
+    ↓
+Business Logic Services
+    ↓
+Repositories & Specifications (Database)
+    ↓
+PostgreSQL Database
+```
+
+**Service Standards:**
+- Mỗi service có `controller → service (impl) → repository → entity`
+- DTOs cho request/response, Mappers để convert
+- Custom repositories khi cần logic phức tạp
+
+**Shared Components:**
+- **enums**: UserRole, PropertyStatus, ViewingStatus, AgentRequestStatus
+- **services**: FileUploadService (Cloudinary), SlugService
+- **response**: ApiResponse format chuẩn
+
+**Configuration Layer:**
+- JWT & Spring Security setup
+- WebSocket configuration
+- OpenAPI/Swagger documentation
+- Cloudinary cloud storage integration
+- Custom JSON serialization
 
 ---
 
