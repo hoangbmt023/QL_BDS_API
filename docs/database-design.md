@@ -45,40 +45,74 @@ conversations
 └── messages (Tin nhắn trong cuộc chat này)
 ```
 
-### Biểu Đồ Box Diagram
+### Biểu Đồ Box Diagram (Chi Tiết Relationships)
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                        USERS                            │
-│  (email, password, fullName, phone, avatar, role)      │
-└─────────────────┬───────────────────────────────────────┘
-                  │
-        ┌─────────┼──────────┬─────────────┬───────────┐
-        │         │          │             │           │
-    ┌───▼──┐ ┌───▼──┐ ┌─────▼─────┐ ┌──────▼───┐ ┌────▼────┐
-    │OWNERS│ │AGENTS│ │PROPERTIES │ │ VIEWINGS │ │FAVORITES│
-    └──────┘ └──────┘ └─────┬─────┘ └──────────┘ └─────────┘
-                            │
-                    ┌───────┴──────────┐
-                    │                  │
-              ┌─────▼──────┐    ┌──────▼────────┐
-              │PROP_IMAGES │    │CONVERSATIONS  │
-              └────────────┘    └──────┬────────┘
-                                       │
-                                    ┌──▼────────┐
-                                    │ MESSAGES  │
-                                    └───────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                          USERS                                      │
+│         (id, email, password, fullName, phone, role)               │
+└─────────┬───────────┬──────────┬────────────┬──────────┬────────────┘
+          │           │          │            │          │
+    ┌─────▼───┐  ┌────▼────┐ ┌──▼────┐  ┌──▼─────┐ ┌──▼────────┐
+    │ OWNERS  │  │ AGENTS  │ │VIEWING│  │FAVORITE│ │REFRESH_   │
+    │(1-to-1) │  │(1-to-1) │ │(books)│  │(marks) │ │TOKEN      │
+    └─────────┘  └─────────┘ └───┬───┘  └───┬────┘ └───────────┘
+                                 │          │
+                    ┌────────────┴──────┬───┘
+                    │                   │
+                ┌───▼──────────┐   ┌────▼─────────┐
+                │ PROPERTIES   │   │  FAVORITES   │
+                │ (owner_id FK)│   │ (user_id FK) │
+                │ (agent_id FK)│   │(property_id) │
+                └───┬──────────┘   └──────────────┘
+                    │
+        ┌───────────┴──────────────┐
+        │                          │
+    ┌───▼──────────┐      ┌───────▼──────┐
+    │PROP_IMAGES   │      │CONVERSATIONS │
+    │(property_id) │      │(property_id) │
+    └──────────────┘      │(user1_id)    │
+                          │(user2_id)    │
+                          └───┬──────────┘
+                              │
+                          ┌───▼──────────┐
+                          │  MESSAGES    │
+                          │(conversation)│
+                          │(sender_id)   │
+                          └──────────────┘
 
-                   ┌──────────────┐
-                   │REFRESH_TOKEN │
-                   │   (JWT Auth) │
-                   └──────────────┘
+┌──────────────────────────┐
+│  AGENT_REQUESTS          │
+│  (user_id FK)            │
+│  (reviewed_by FK)        │
+└──────────────────────────┘
 
-                   ┌──────────────┐
-                   │AGENT_REQUEST │
-                   │(Upgrade Flow)│
-                   └──────────────┘
+┌──────────────────────────┐
+│  OTPS                    │
+│  (email - no FK)         │
+│  (for verification)      │
+└──────────────────────────┘
 ```
+
+**Ký hiệu:**
+- `--→` = Foreign Key relationship
+- `(1-to-1)` = One-to-one
+- `(1-to-many)` = Implied by arrows
+
+**Relationships Chi Tiết:**
+- **USERS → OWNERS/AGENTS**: 1-to-1 (upgrade)
+- **USERS → VIEWINGS**: 1-to-many (user_id FK)
+- **USERS → FAVORITES**: 1-to-many (user_id FK)
+- **USERS → MESSAGES**: 1-to-many (sender_id FK)
+- **USERS → REFRESH_TOKENS**: 1-to-many (user_id FK)
+- **USERS → AGENT_REQUESTS**: 1-to-many (user_id FK)
+- **OWNERS/AGENTS → PROPERTIES**: 1-to-many (owner_id/agent_id FK)
+- **PROPERTIES → PROP_IMAGES**: 1-to-many (property_id FK)
+- **PROPERTIES → VIEWINGS**: 1-to-many (property_id FK)
+- **PROPERTIES → FAVORITES**: 1-to-many (property_id FK)
+- **PROPERTIES → CONVERSATIONS**: 1-to-many (property_id FK)
+- **CONVERSATIONS → MESSAGES**: 1-to-many (conversation_id FK)
+- **CONVERSATIONS ← USERS**: Many-to-many (user1_id, user2_id FK)
 
 ### Mermaid ERD (Chi Tiết)
 
