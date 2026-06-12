@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   db:
@@ -20,14 +20,14 @@ services:
       retries: 5
 
   app:
-    build: .
+    # Kéo Image trực tiếp từ Docker Hub về thay vì tự build ở máy nội bộ
+    image: ${DOCKER_USERNAME:-hoangbmt023}/qlbds-api:latest
     container_name: qlbds_app
     restart: always
     ports:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=production
-      # Môi trường Docker thì Database Host không còn là localhost nữa, mà là tên service 'db'
       - DB_URL=jdbc:postgresql://db:5432/bds_db 
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
