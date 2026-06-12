@@ -116,7 +116,7 @@ public class ConversationServiceTest {
         request.setPropertyId(10L);
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(10L)).thenReturn(Optional.of(property));
         when(conversationRepository.findByPropertyAndParticipants(10L, currentUser, otherUser))
                 .thenReturn(Optional.empty());
         when(conversationRepository.save(any(Conversation.class))).thenReturn(conversation);
@@ -138,7 +138,7 @@ public class ConversationServiceTest {
         request.setPropertyId(10L);
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(10L)).thenReturn(Optional.of(property));
         when(conversationRepository.findByPropertyAndParticipants(10L, currentUser, otherUser))
                 .thenReturn(Optional.of(conversation));
 
@@ -159,7 +159,7 @@ public class ConversationServiceTest {
         request.setPropertyId(10L);
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.empty());
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(10L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> conversationService.getOrCreateConversation(request));
     }
@@ -177,7 +177,7 @@ public class ConversationServiceTest {
         property.setOwner(owner);
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(10L)).thenReturn(Optional.of(property));
 
         assertThrows(InvalidResourceException.class, () -> conversationService.getOrCreateConversation(request));
     }
@@ -195,7 +195,7 @@ public class ConversationServiceTest {
         property.setAgent(agent);
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(10L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(10L)).thenReturn(Optional.of(property));
 
         assertThrows(InvalidResourceException.class, () -> conversationService.getOrCreateConversation(request));
     }

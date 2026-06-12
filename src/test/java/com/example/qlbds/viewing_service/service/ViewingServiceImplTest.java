@@ -83,7 +83,7 @@ public class ViewingServiceImplTest {
         request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0));
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
         when(viewingRepository.existsConflictingViewing(eq(100L), any(), any(), any(), eq(null))).thenReturn(false);
 
         Viewing savedViewing = new Viewing();
@@ -110,7 +110,7 @@ public class ViewingServiceImplTest {
         property.setOwner(owner);
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
 
         InvalidResourceException exception = assertThrows(InvalidResourceException.class,
                 () -> viewingService.createViewing(request));
@@ -126,7 +126,7 @@ public class ViewingServiceImplTest {
         request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(10).withMinute(0));
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
         when(viewingRepository.existsConflictingViewing(eq(100L), any(), any(), any(), eq(null))).thenReturn(true);
 
         InvalidResourceException exception = assertThrows(InvalidResourceException.class,
@@ -249,7 +249,7 @@ public class ViewingServiceImplTest {
         ViewingCreateRequest request = new ViewingCreateRequest();
         request.setPropertyId(999L);
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(999L)).thenReturn(Optional.empty());
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(999L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> viewingService.createViewing(request));
     }
@@ -265,7 +265,7 @@ public class ViewingServiceImplTest {
         property.setAgent(agent);
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
 
         InvalidResourceException exception = assertThrows(InvalidResourceException.class,
                 () -> viewingService.createViewing(request));
@@ -280,7 +280,7 @@ public class ViewingServiceImplTest {
         request.setScheduledTime(LocalDateTime.now().minusHours(1));
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
 
         InvalidResourceException exception = assertThrows(InvalidResourceException.class,
                 () -> viewingService.createViewing(request));
@@ -572,7 +572,7 @@ public class ViewingServiceImplTest {
         request.setPropertyId(100L);
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
 
         InvalidResourceException exception = assertThrows(InvalidResourceException.class,
                 () -> viewingService.createViewing(request));
@@ -706,7 +706,7 @@ public class ViewingServiceImplTest {
         request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(7).withMinute(0));
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
 
         InvalidResourceException exception = assertThrows(InvalidResourceException.class, () -> viewingService.createViewing(request));
         assertTrue(exception.getMessage().contains("trong giờ làm việc"));
@@ -720,7 +720,7 @@ public class ViewingServiceImplTest {
         request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(17).withMinute(30));
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
 
         InvalidResourceException exception = assertThrows(InvalidResourceException.class, () -> viewingService.createViewing(request));
         assertTrue(exception.getMessage().contains("trong giờ làm việc"));
@@ -734,7 +734,7 @@ public class ViewingServiceImplTest {
         request.setScheduledTime(LocalDateTime.now().plusDays(1).withHour(10).withMinute(15));
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
-        when(propertyRepository.findByIdAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
+        when(propertyRepository.findByIdAndVisibilityTrueAndIsDeletedFalse(100L)).thenReturn(Optional.of(property));
 
         InvalidResourceException exception = assertThrows(InvalidResourceException.class, () -> viewingService.createViewing(request));
         assertTrue(exception.getMessage().contains("chẵn theo mỗi 30 phút"));
