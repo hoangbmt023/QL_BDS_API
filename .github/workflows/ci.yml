@@ -58,6 +58,9 @@ jobs:
         CLOUDINARY_API_KEY: test
         CLOUDINARY_API_SECRET: test
         SPRING_PROFILES_ACTIVE: default
+        ADMIN_USERNAME: testadmin
+        ADMIN_PASSWORD: testpassword
+        ADMIN_EMAIL: testadmin@example.com
       run: ./mvnw test jacoco:report
 
     # (Tùy chọn) Upload test report để xem trên GitHub Actions
