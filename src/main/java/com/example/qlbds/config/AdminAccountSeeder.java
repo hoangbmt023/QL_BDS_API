@@ -20,13 +20,13 @@ public class AdminAccountSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     // Cho phép cấu hình qua biến môi trường (Ví dụ thêm ADMIN_USERNAME vào .env)
-    @Value("${admin.default.username:admin}")
+    @Value("${admin.default.username}")
     private String defaultUsername;
 
-    @Value("${admin.default.password:admin123}")
+    @Value("${admin.default.password}")
     private String defaultPassword;
-    
-    @Value("${admin.default.email:admin@example.com}")
+
+    @Value("${admin.default.email}")
     private String defaultEmail;
 
     @Override
@@ -35,7 +35,7 @@ public class AdminAccountSeeder implements CommandLineRunner {
         // Kiểm tra xem đã có tài khoản admin mặc định chưa
         if (!userRepository.existsByUsername(defaultUsername)) {
             log.info("Bắt đầu khởi tạo tài khoản Admin mặc định...");
-            
+
             User admin = User.builder()
                     .username(defaultUsername)
                     .password(passwordEncoder.encode(defaultPassword))
