@@ -56,6 +56,11 @@ MAIL_PASSWORD=your_app_password
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+
+# Default Admin Account
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+ADMIN_EMAIL=admin@qlbds.com
 ```
 
 *(Lưu ý: Các file `.env.*` đã được cấu hình trong `.gitignore` để đảm bảo chúng sẽ không bao giờ bị đẩy lên GitHub).*
@@ -87,6 +92,40 @@ java -jar target/QLBDS-0.0.1-SNAPSHOT.jar
 ```
 
 Ứng dụng sẽ khởi chạy trên `http://localhost:8080`
+
+---
+
+## 🐳 Triển Khai (Deployment) & CI/CD
+
+Dự án đã được tích hợp luồng triển khai tự động (CI/CD) thông qua **GitHub Actions** và đóng gói bằng **Docker**.
+
+### 1. Khởi chạy bằng Docker Compose
+
+Bạn có thể chạy toàn bộ dự án (Bao gồm API và Database PostgreSQL) chỉ bằng một lệnh duy nhất, rất hữu ích cho quá trình triển khai production:
+
+```bash
+# Khởi chạy hệ thống (chạy ngầm)
+docker-compose up -d
+
+# Xem log của hệ thống
+docker-compose logs -f
+
+# Tắt hệ thống
+docker-compose down
+```
+
+### 2. CI/CD Pipelines (GitHub Actions)
+
+Dự án sử dụng 2 luồng tự động (Workflows):
+
+- **CI Pipeline (`.github/workflows/ci.yml`)**: 
+  - Tự động chạy khi có Push hoặc Pull Request vào các nhánh `develop` và `main`.
+  - Compile code, quét lỗi.
+  - Khởi tạo Database ảo (Service Container) và tự động chạy toàn bộ Unit Tests/Integration Tests.
+- **CD Pipeline (`.github/workflows/cd.yml`)**:
+  - Tự động chạy khi có code được đẩy lên (Push/Merge) nhánh `main`.
+  - Build Docker Image theo `Dockerfile` nhiều bước (Multi-stage build) để tối ưu kích thước.
+  - Tự động đẩy Image lên **Docker Hub** để sẵn sàng cho máy chủ tải về triển khai.
 
 ---
 
