@@ -1,0 +1,93 @@
+package com.example.qlbds.user_service.entity;
+
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.example.qlbds.shared.entity.enums.UserRole;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "users")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true, length = 100)
+    private String username;
+
+    @Column(nullable = false, unique = true, length = 150)
+    private String email;
+
+    @Column(nullable = false, length = 255)
+    private String password;
+
+    @Column(length = 150)
+    private String fullName;
+
+    @Column(length = 20)
+    private String phone;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false, columnDefinition = "user_role")
+    private UserRole role;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
+    @jakarta.persistence.OneToOne(mappedBy = "user")
+    private Agent agent;
+
+    @jakarta.persistence.OneToOne(mappedBy = "user")
+    private Owner owner;
+
+    // Helper methods
+    public boolean isPending() {
+        return !this.isActive;
+    }
+
+    public void activate() {
+        this.isActive = true;
+    }
+
+    public void changePassword(String newEncodedPassword) {
+        this.password = newEncodedPassword;
+    }
+}
