@@ -21,7 +21,7 @@ services:
 
   app:
     # Kéo Image trực tiếp từ Docker Hub về thay vì tự build ở máy nội bộ
-    image: ${DOCKER_USERNAME:-hoangbmt023}/qlbds-api:latest
+    image: ${DOCKER_USERNAME}/qlbds-api:latest
     container_name: qlbds_app
     restart: always
     ports:
