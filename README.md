@@ -1,6 +1,4 @@
-<<<<<<< HEAD
-# QL_BDS_API
-=======
+
 # Nền tảng Quản lý Bất Động Sản (Real Estate Management Platform) - Backend API
 
 Backend API cho nền tảng quản lý bất động sản được xây dựng với **Spring Boot 4.0.6** và **Java 21**, cung cấp các dịch vụ toàn diện cho việc quản lý bất động sản, đặt lịch xem nhà, nhắn tin thời gian thực, và quản lý người dùng với các vai trò khác nhau (User, Owner, Agent, Admin).
@@ -353,4 +351,3 @@ Chi tiết về các kịch bản kiểm thử (Test Cases), vui lòng xem tại
 ## 👨‍💻 Thông tin Liên hệ
 * **Nhóm/Cá nhân thực hiện:** Huy Hoàng
 * **Đề Tài:** Xây dựng Backend API cho Nền tảng Bất động sản và Cho thuê Nhà
->>>>>>> a43166f (docs: add comprehensive documentation for real codebase)
