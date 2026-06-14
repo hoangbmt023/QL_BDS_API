@@ -1,0 +1,2250 @@
+{
+  "info": {
+    "_postman_id": "48ef67f1-c5e8-4020-8724-af95463a2919",
+    "name": "QL_BDS",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "45449380",
+    "_collection_link": "https://go.postman.co/collection/45449380-48ef67f1-c5e8-4020-8724-af95463a2919?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "const token = response.data.accessToken;\r",
+                  "const refreshToken = response.data.refreshToken;\r",
+                  "\r",
+                  "const payload = JSON.parse(atob(token.split('.')[1]));\r",
+                  "\r",
+                  "const role =\r",
+                  "    payload.role ||\r",
+                  "    payload.Role ||\r",
+                  "    payload[\"http://schemas.microsoft.com/ws/2008/06/identity/claims/role\"];\r",
+                  "\r",
+                  "const sub = payload.sub ||\r",
+                  "            payload[\"http://schemas.microsoft.com/ws/2008/06/identity/claims/sub\"]\r",
+                  "\r",
+                  "if (role) {\r",
+                  "    const roleName = role.toLowerCase();\r",
+                  "    const userName = sub.toLowerCase();\r",
+                  "    pm.environment.set(`token-${roleName}-${userName}`, token);\r",
+                  "    pm.environment.set(`rf-${roleName}-${userName}`, refreshToken);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"huyhoang0210204\",\r\n    \"password\": \"Deplaocuatao5.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/auth/login",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "const token = response.data.accessToken;\r",
+                  "const payload = JSON.parse(atob(token.split('.')[1]));\r",
+                  "\r",
+                  "const role =\r",
+                  "    payload.role ||\r",
+                  "    payload.Role ||\r",
+                  "    payload[\"http://schemas.microsoft.com/ws/2008/06/identity/claims/role\"];\r",
+                  "\r",
+                  "const sub = payload.sub ||\r",
+                  "            payload[\"http://schemas.microsoft.com/ws/2008/06/identity/claims/sub\"]\r",
+                  "\r",
+                  "if (role) {\r",
+                  "    const roleName = role.toLowerCase();\r",
+                  "    const userName = sub.toLowerCase();\r",
+                  "    pm.environment.set(`token-${roleName}-${userName}`, token);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"{{rf-agent-hoangkutehbcd}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/auth/refresh-token",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "auth",
+                "refresh-token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Log Out",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"{{rf-admin-admin}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/auth/logout",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke Token",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWQwYzczZGRmNGYwMDgwZDVhODdlNmEiLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInJvbGUiOlsiQURNSU4iXSwiaWF0IjoxNzc1MzAyOTcxLCJleHAiOjE3NzUzMDY1NzEsImF1ZCI6ImdpZW5jYXJfY2xpZW50IiwiaXNzIjoiZ2llbmNhci5uZXQifQ.dgWy-RFT9kwp3MePVD1G-hNmlswyOTt7NG9EVpkk12k",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"{{rf-admin-admin}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/auth/revoke-token",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "auth",
+                "revoke-token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Otp Active",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}auth/send-activate-otp",
+              "host": [
+                "{{domain}}auth"
+              ],
+              "path": [
+                "send-activate-otp"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Account",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\",\r\n    \"otp\": \"nw2ibm\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/auth/activate-account",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "auth",
+                "activate-account"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/api/auth/forgot-password",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "forgot-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\",\r\n    \"otp\": \"952359\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/auth/verify-forgot-password",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "auth",
+                "verify-forgot-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\",\r\n    \"otp\": \"BICRGD\",\r\n    \"newPassword\": \"Deplaocuatao5@\",\r\n    \"logoutAllDevices\": \"true\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/auth/reset-password",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Restore Otp",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/auth/send-restore-otp",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "auth",
+                "send-restore-otp"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Restore Account",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\",\r\n    \"otp\": \"917366\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/auth/restore-account",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "auth",
+                "restore-account"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"username\": \"hoangkutehbcd\",\r\n  \"email\": \"hoangkutehbcd@gmail.com\",\r\n  \"password\": \"Deplaocuatao5.\",\r\n  \"fullName\": \"hoang\",\r\n  \"phone\": \"0374687144\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/auth/register",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Users",
+          "item": [
+            {
+              "name": "Info Me",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQUdFTlQiLCJlbWFpbCI6ImhvYW5na3V0ZWhiY2RAZ21haWwuY29tIiwic3ViIjoiaG9hbmdrdXRlaGJjZCIsImlhdCI6MTc3ODg0OTk0MSwiZXhwIjoxNzc4OTM2MzQxfQ.KR9XcrOkOv7iHMt3eQhUGDvKojn8VaymxibJU1f3r5I3J9J4sbgHpq-9b_3t5M2s",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWQwYzczZGRmNGYwMDgwZDVhODdlNmEiLCJpYXQiOjE3NzUzMDI5NzEsImV4cCI6MTc3NjU5ODk3MX0.m8b5gOYWpARdVPALBjYVM2lNMBQD_pfJthYng400Ucg\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{domain}}/users/me",
+                  "host": [
+                    "{{domain}}"
+                  ],
+                  "path": [
+                    "users",
+                    "me"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List User (Admin)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQURNSU4iLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6ImFkbWluIiwiaWF0IjoxNzc4ODQ5OTk4LCJleHAiOjE3Nzg5MzYzOTh9.MTbE3rjq1GM4L7QSiEXo5Jl0r6EO1P5YY6C00a41hLPUg0Upluw0embEt_-ek69O",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{domain}}/users",
+                  "host": [
+                    "{{domain}}"
+                  ],
+                  "path": [
+                    "users"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update profile",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token-owner-huyhoang0210204}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"fullName\": \"hoangnek\",\r\n  \"phone\": \"\",\r\n  \"agent\": {\r\n    \"licenseNumber\": \"\",\r\n    \"agencyName\": \"\"\r\n  },\r\n  \"owner\": {\r\n    \"address\": \"Tổ 8 khối 1\",\r\n    \"description\": \"hoho\"\r\n  }\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{domain}}/users/profile",
+                  "host": [
+                    "{{domain}}"
+                  ],
+                  "path": [
+                    "users",
+                    "profile"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Change Role (Admin)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQURNSU4iLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6ImFkbWluIiwiaWF0IjoxNzc4ODQ5OTk4LCJleHAiOjE3Nzg5MzYzOTh9.MTbE3rjq1GM4L7QSiEXo5Jl0r6EO1P5YY6C00a41hLPUg0Upluw0embEt_-ek69O",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"role\": \"AGENT\",\r\n    \"address\": \"11111\",\r\n    \"description\": \"dddddd\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{domain}}/users/1/role",
+                  "host": [
+                    "{{domain}}"
+                  ],
+                  "path": [
+                    "users",
+                    "1",
+                    "role"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Restore User (Admin)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token-admin-admin}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"fullName\": \"hoangnek\",\r\n  \"phone\": \"\",\r\n  \"agent\": {\r\n    \"licenseNumber\": \"\",\r\n    \"agencyName\": \"\"\r\n  },\r\n  \"owner\": {\r\n    \"address\": \"Tổ 8 khối 1\",\r\n    \"description\": \"hoho\"\r\n  }\r\n}"
+                },
+                "url": {
+                  "raw": "{{domain}}/users/2/restore",
+                  "host": [
+                    "{{domain}}"
+                  ],
+                  "path": [
+                    "users",
+                    "2",
+                    "restore"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete User (Admin)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{token-admin-admin}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"fullName\": \"hoangnek\",\r\n  \"phone\": \"\",\r\n  \"agent\": {\r\n    \"licenseNumber\": \"\",\r\n    \"agencyName\": \"\"\r\n  },\r\n  \"owner\": {\r\n    \"address\": \"Tổ 8 khối 1\",\r\n    \"description\": \"hoho\"\r\n  }\r\n}"
+                },
+                "url": {
+                  "raw": "{{domain}}/users/profile",
+                  "host": [
+                    "{{domain}}"
+                  ],
+                  "path": [
+                    "users",
+                    "profile"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Roles",
+          "item": [
+            {
+              "name": "Auto Signature Owner",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQUdFTlQiLCJlbWFpbCI6ImhvYW5na3V0ZWhiY2RAZ21haWwuY29tIiwic3ViIjoiaG9hbmdrdXRlaGJjZCIsImlhdCI6MTc3ODg1MDc2NSwiZXhwIjoxNzc4OTM3MTY1fQ.3QFkbYquTYwToAmxBXWxNn4KMuzj4AHQo-CujUYd9XZMxmfBpNvslosPT5blWqcB",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"address\": \"To 8 khoi 1\",\r\n    \"description\": \"Đẳng cấp\" \r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{domain}}/roles/become-owner",
+                  "host": [
+                    "{{domain}}"
+                  ],
+                  "path": [
+                    "roles",
+                    "become-owner"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Agent Requests",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQUdFTlQiLCJlbWFpbCI6ImhvYW5na3V0ZWhiY2RAZ21haWwuY29tIiwic3ViIjoiaG9hbmdrdXRlaGJjZCIsImlhdCI6MTc3ODg1NDY4MywiZXhwIjoxNzc4OTQxMDgzfQ.XVwHgEyBh1eFz0690qto8QrCu2UCf1B5OpeTT15TaXazfSsaSFRhauMuEAiw9Zn3",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"licenseNumber\": \"2123123\",\r\n    \"agencyName\": \"Hofn\",\r\n    \"note\": \"s\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{domain}}/roles/agent-requests",
+                  "host": [
+                    "{{domain}}"
+                  ],
+                  "path": [
+                    "roles",
+                    "agent-requests"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List Agent Request (Admin)",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQURNSU4iLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6ImFkbWluIiwiaWF0IjoxNzc4ODU0NTY2LCJleHAiOjE3Nzg5NDA5NjZ9.BrDEafORlTG2cjXkdwRFKKQkB2uVjUrRPOUgt0bUhx_s_rrprZ5lh-ClOKmGcsZx",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"licenseNumber\": \"To 8 khoi 1\",\r\n    \"agencyName\": \"Đẳng cấp\",\r\n    \"note\": \"s\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{domain}}/roles/agent-requests",
+                  "host": [
+                    "{{domain}}"
+                  ],
+                  "path": [
+                    "roles",
+                    "agent-requests"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Review Agent Request",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQURNSU4iLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6ImFkbWluIiwiaWF0IjoxNzc4ODU0NTY2LCJleHAiOjE3Nzg5NDA5NjZ9.BrDEafORlTG2cjXkdwRFKKQkB2uVjUrRPOUgt0bUhx_s_rrprZ5lh-ClOKmGcsZx",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n        \"approved\": true,\r\n    \"adminNote\": \"Đẳng cấp\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{domain}}/roles/agent-requests/4/review",
+                  "host": [
+                    "{{domain}}"
+                  ],
+                  "path": [
+                    "roles",
+                    "agent-requests",
+                    "4",
+                    "review"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Propertie",
+      "item": [
+        {
+          "name": "Filter List Properties",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\",\r\n    \"otp\": \"917366\"\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/properties?page=1&size=40",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "properties"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "40"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Properties Me",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiT1dORVIiLCJlbWFpbCI6Imh1eWhvYW5nMDIxMDIwNEBnbWFpbC5jb20iLCJzdWIiOiJodXlob2FuZzAyMTAyMDQiLCJpYXQiOjE3Nzk1MDA3NjMsImV4cCI6MTc3OTU4NzE2M30.vbaq-tWtGcnqb_Meg8AuUuiR1GqC59Y9hPj7hvSyeLdyNLCPc0ytJPJhB-0o_WKD",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\",\r\n    \"otp\": \"917366\"\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/properties/me?&page=1&size=40",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "properties",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": null,
+                  "value": null
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "40"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Properties (Admin)",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQURNSU4iLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6ImFkbWluIiwiaWF0IjoxNzc5NTAxMjgxLCJleHAiOjE3Nzk1ODc2ODF9.8x9T_ZTZr7nbTS_rLCbnwTRZGUIaSh10L7wYatQVMcXgimaf3O6bO9W8TnoNbPM4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\",\r\n    \"otp\": \"917366\"\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/properties/admin?status=PENDING&page=1&size=40",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "properties",
+                "admin"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "40"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Properties Detail",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\",\r\n    \"otp\": \"917366\"\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/properties/dat-nen-xay-dung-dak-lak-1779504659948",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "properties",
+                "dat-nen-xay-dung-dak-lak-1779504659948"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Similar Properties",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{domain}}/properties/1/similar?limit=5",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "properties",
+                "1",
+                "similar"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Analytics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-owner-huyhoang0210204}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{domain}}/properties/1/analytics",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "properties",
+                "1",
+                "analytics"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Images Properties",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiT1dORVIiLCJlbWFpbCI6Imh1eWhvYW5nMDIxMDIwNEBnbWFpbC5jb20iLCJzdWIiOiJodXlob2FuZzAyMTAyMDQiLCJpYXQiOjE3Nzk1MDA3NjMsImV4cCI6MTc3OTU4NzE2M30.vbaq-tWtGcnqb_Meg8AuUuiR1GqC59Y9hPj7hvSyeLdyNLCPc0ytJPJhB-0o_WKD",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "type": "file",
+                  "uuid": "eeeafa10-47f1-4e05-a13a-5466c9dfa641",
+                  "src": "/C:/Users/hoang/Downloads/f50416df-bc0f-4787-8b3d-ab47cf039cec.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{domain}}/properties/1/images",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "properties",
+                "1",
+                "images"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Image Properties",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiT1dORVIiLCJlbWFpbCI6Imh1eWhvYW5nMDIxMDIwNEBnbWFpbC5jb20iLCJzdWIiOiJodXlob2FuZzAyMTAyMDQiLCJpYXQiOjE3Nzk1MDA3NjMsImV4cCI6MTc3OTU4NzE2M30.vbaq-tWtGcnqb_Meg8AuUuiR1GqC59Y9hPj7hvSyeLdyNLCPc0ytJPJhB-0o_WKD",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "",
+                "value": "",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "uuid": "0486ceff-2c9d-4ec8-878f-72a5961dfec1",
+                  "src": "/C:/Users/hoang/Downloads/Screenshot 2026-02-03 192711.png"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{domain}}/properties/1/images/2",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "properties",
+                "1",
+                "images",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Properties",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiT1dORVIiLCJlbWFpbCI6Imh1eWhvYW5nMDIxMDIwNEBnbWFpbC5jb20iLCJzdWIiOiJodXlob2FuZzAyMTAyMDQiLCJpYXQiOjE3Nzk1MDA3NjMsImV4cCI6MTc3OTU4NzE2M30.vbaq-tWtGcnqb_Meg8AuUuiR1GqC59Y9hPj7hvSyeLdyNLCPc0ytJPJhB-0o_WKD",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n  {\r\n    \"title\": \"Đất nền xây dựng Dak lak\",\r\n    \"description\": \"Đất nền đỏ sổ riêng, phù hợp đầu tư lâu dài.\",\r\n    \"price\": 80000000,\r\n    \"area\": 90.0,\r\n    \"bedrooms\": 2,\r\n    \"bathrooms\": 1,\r\n    \"address\": \"khoi 1\",\r\n    \"city\": \"dak lak\",\r\n    \"district\": \"buon ma thuot\",\r\n    \"ownerId\": 1,\r\n    \"agentId\": null\r\n  }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/properties",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "properties"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Properties",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"stringstri\",\r\n  \"description\": \"string\",\r\n  \"price\": 0,\r\n  \"area\": 0.1,\r\n  \"bedrooms\": 50,\r\n  \"bathrooms\": 50,\r\n  \"address\": \"string\",\r\n  \"city\": \"string\",\r\n  \"district\": \"string\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/properties/id",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "properties",
+                "id"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Status Properties [admin]",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQURNSU4iLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6ImFkbWluIiwiaWF0IjoxNzc5NTAxMjgxLCJleHAiOjE3Nzk1ODc2ODF9.8x9T_ZTZr7nbTS_rLCbnwTRZGUIaSh10L7wYatQVMcXgimaf3O6bO9W8TnoNbPM4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\",\r\n    \"otp\": \"917366\"\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/properties/1/status?status=APPROVED&reason=kk",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "properties",
+                "1",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "APPROVED"
+                },
+                {
+                  "key": "reason",
+                  "value": "kk"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Properties",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQURNSU4iLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6ImFkbWluIiwiaWF0IjoxNzc5NTAxMjgxLCJleHAiOjE3Nzk1ODc2ODF9.8x9T_ZTZr7nbTS_rLCbnwTRZGUIaSh10L7wYatQVMcXgimaf3O6bO9W8TnoNbPM4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hoangkutehbcd@gmail.com\",\r\n    \"otp\": \"917366\"\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/api/properties/id",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "api",
+                "properties",
+                "id"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Images Properties",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQURNSU4iLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInN1YiI6ImFkbWluIiwiaWF0IjoxNzc5NTAxMjgxLCJleHAiOjE3Nzk1ODc2ODF9.8x9T_ZTZr7nbTS_rLCbnwTRZGUIaSh10L7wYatQVMcXgimaf3O6bO9W8TnoNbPM4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{domain}}/properties/1/images/2",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "properties",
+                "1",
+                "images",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Favorites",
+      "item": [
+        {
+          "name": "Get Favorites Properties Me",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQUdFTlQiLCJlbWFpbCI6ImhvYW5na3V0ZWhiY2RAZ21haWwuY29tIiwic3ViIjoiaG9hbmdrdXRlaGJjZCIsImlhdCI6MTc4MDE1MDQ3NCwiZXhwIjoxNzgwMjM2ODc0fQ.UgXUVRMEvJr1nsIaB645v0PO1xtZB4ym_YT3cRxykxrYJBAr7JGA0lqovS5YjZQt",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/favorites/me",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "favorites",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Favorites Properties",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQUdFTlQiLCJlbWFpbCI6ImhvYW5na3V0ZWhiY2RAZ21haWwuY29tIiwic3ViIjoiaG9hbmdrdXRlaGJjZCIsImlhdCI6MTc4MDE1MDQ3NCwiZXhwIjoxNzgwMjM2ODc0fQ.UgXUVRMEvJr1nsIaB645v0PO1xtZB4ym_YT3cRxykxrYJBAr7JGA0lqovS5YjZQt",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{domain}}/favorites/6/check",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "favorites",
+                "6",
+                "check"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Favorites Properties",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-owner-huyhoang0210204}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"propertyId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/favorites",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "favorites"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Favorites Properties",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQUdFTlQiLCJlbWFpbCI6ImhvYW5na3V0ZWhiY2RAZ21haWwuY29tIiwic3ViIjoiaG9hbmdrdXRlaGJjZCIsImlhdCI6MTc4MDE1MDQ3NCwiZXhwIjoxNzgwMjM2ODc0fQ.UgXUVRMEvJr1nsIaB645v0PO1xtZB4ym_YT3cRxykxrYJBAr7JGA0lqovS5YjZQt",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/favorites/6",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "favorites",
+                "6"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Multiple Favorites Properties",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQUdFTlQiLCJlbWFpbCI6ImhvYW5na3V0ZWhiY2RAZ21haWwuY29tIiwic3ViIjoiaG9hbmdrdXRlaGJjZCIsImlhdCI6MTc4MDE1MDQ3NCwiZXhwIjoxNzgwMjM2ODc0fQ.UgXUVRMEvJr1nsIaB645v0PO1xtZB4ym_YT3cRxykxrYJBAr7JGA0lqovS5YjZQt",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"propertyIds\": [\r\n    3,4\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/favorites/multiple",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "favorites",
+                "multiple"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Favorites Properties All",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQUdFTlQiLCJlbWFpbCI6ImhvYW5na3V0ZWhiY2RAZ21haWwuY29tIiwic3ViIjoiaG9hbmdrdXRlaGJjZCIsImlhdCI6MTc4MDE1MDQ3NCwiZXhwIjoxNzgwMjM2ODc0fQ.UgXUVRMEvJr1nsIaB645v0PO1xtZB4ym_YT3cRxykxrYJBAr7JGA0lqovS5YjZQt",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{domain}}/favorites/all",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "favorites",
+                "all"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Viewings",
+      "item": [
+        {
+          "name": "List Viewings Me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{domain}}/viewings/me?page=1&size=10",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "viewings",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "disabled": true
+                },
+                {
+                  "key": "upcoming",
+                  "value": "false",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "scheduledTime,desc",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Viewing Detail",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-owner-huyhoang0210204}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/viewings/1",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "viewings",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "disabled": true
+                },
+                {
+                  "key": "upcoming",
+                  "value": "false",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "scheduledTime,desc",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Viewigns Manager Me",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-owner-huyhoang0210204}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{domain}}/viewings/managed",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "viewings",
+                "managed"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "disabled": true
+                },
+                {
+                  "key": "upcoming",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "scheduledTime,desc",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Viewings Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-owner-huyhoang0210204}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{domain}}/viewings/stats?asManager=true",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "viewings",
+                "stats"
+              ],
+              "query": [
+                {
+                  "key": "asManager",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Viewings Available Slots",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-owner-huyhoang0210204}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{domain}}/viewings/properties/1/available-slots?date=2026-06-10",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "viewings",
+                "properties",
+                "1",
+                "available-slots"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-06-10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Viewings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"propertyId\": 1,\r\n  \"scheduledTime\": \"2026-06-10T17:35:42.251Z\",\r\n  \"note\": \"oke\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/viewings",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "viewings"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "PENDING",
+                  "disabled": true
+                },
+                {
+                  "key": "upcoming",
+                  "value": "false",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "scheduledTime,desc",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Viewings Reschedule",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"scheduledTime\": \"2026-06-10T12:30:00\",\r\n    \"note\": \"Tôi muốn xem nhà vào sáng thứ 4\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/viewings/1/reschedule",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "viewings",
+                "1",
+                "reschedule"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Status Viewing",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-owner-huyhoang0210204}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"status\": \"COMPLETED\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/viewings/1/status",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "viewings",
+                "1",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Conversations",
+      "item": [
+        {
+          "name": "Get My Conversations",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"propertyId\": 1\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/conversations/me",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "conversations",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Conversation Detail",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"propertyId\": 1\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/conversations/1",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "conversations",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Unread Count",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"propertyId\": 1\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/conversations/unread-count",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "conversations",
+                "unread-count"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Conversation Messages",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"propertyId\": 1\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/conversations/1/messages?page=1&size=10",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "conversations",
+                "1",
+                "messages"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"content\": \"huhu\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/conversations/3/messages",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "conversations",
+                "3",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Or Create Conversation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"propertyId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/conversations",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "conversations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark As Read",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"propertyId\": 1\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/conversations/3/read",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "conversations",
+                "3",
+                "read"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Recall Message",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"propertyId\": 1\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/conversations/messages/17/recall",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "conversations",
+                "messages",
+                "17",
+                "recall"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit Message",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"content\": \"aa\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{domain}}/conversations/messages/17/edit",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "conversations",
+                "messages",
+                "17",
+                "edit"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Presences",
+      "item": [
+        {
+          "name": "Get Presence",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token-agent-hoangkutehbcd}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"propertyId\": 1\r\n}"
+            },
+            "url": {
+              "raw": "{{domain}}/presence/huyhoang0210204",
+              "host": [
+                "{{domain}}"
+              ],
+              "path": [
+                "presence",
+                "huyhoang0210204"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
