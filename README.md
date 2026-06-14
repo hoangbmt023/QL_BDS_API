@@ -7,10 +7,12 @@ Backend API cho nền tảng quản lý bất động sản được xây dựng
 
 Tài liệu chi tiết được sắp xếp trong thư mục `docs/`:
 
-1. [📘 Tài Liệu API](docs/api-document.md) - Hướng dẫn sử dụng các endpoint REST
-2. [🗄️ Thiết Kế Cơ Sở Dữ Liệu](docs/database-design.md) - Sơ đồ ERD và mô tả entities
-3. [🎯 Luồng Nghiệp Vụ](docs/user-flows.md) - Các kịch bản sử dụng (User Stories)
-4. [🧪 Kiểm Thử](docs/testing.md) - Danh sách test cases chính
+1. [📘 Báo Cáo Dự Án Chi Tiết](docs/project-report.md) — Tài liệu SRS, Phân tích nghiệp vụ và thiết kế hệ thống chi tiết
+2. [📘 Tài Liệu API](docs/api-document.md) — Hướng dẫn sử dụng các endpoint REST
+3. [🗄️ Thiết Kế Cơ Sở Dữ Liệu](docs/database-design.md) — Sơ đồ ERD và mô tả entities
+4. [🎯 Luồng Nghiệp Vụ](docs/user-flows.md) — Các kịch bản sử dụng (User Stories)
+5. [🧪 Kiểm Thử](docs/testing.md) — Danh sách test cases chính
+6. [🚀 Postman Collection](docs/QL_BDS.postman_collection.json) — Bộ sưu tập API Request để import và test nhanh trên Postman
 
 ---
 
@@ -18,9 +20,12 @@ Tài liệu chi tiết được sắp xếp trong thư mục `docs/`:
 
 ### Yêu Cầu Hệ Thống
 
-- **Java 21+** (hoặc Java 17+)
-- **Apache Maven 3.8+** (Maven Wrapper đã được bao gồm)
-- **PostgreSQL 12+** (Database chính)
+*(Lưu ý: Nếu sử dụng Docker & Docker Compose, bạn chỉ cần cài đặt Docker/Docker Compose và Git/Cloudinary Account, không cần cài đặt thủ công Java, Maven hay PostgreSQL trên máy cá nhân).*
+
+- **Java 21+** (hoặc Java 17+) — *Không cần nếu chạy bằng Docker*
+- **Apache Maven 3.8+** (Maven Wrapper đã được bao gồm) — *Không cần nếu chạy bằng Docker*
+- **PostgreSQL 12+** (Database chính) — *Không cần nếu chạy bằng Docker*
+- **Docker & Docker Compose** — *Yêu cầu bắt buộc nếu chạy bằng Docker*
 - **Cloudinary Account** (Để upload hình ảnh - tùy chọn)
 - **Git** (Để clone repository)
 
@@ -72,8 +77,8 @@ Tương tự, tạo file `.env.production` chứa thông tin thật của Server
 **Phương pháp 1: Sử dụng Maven Wrapper (Khuyên dùng)**
 
 ```bash
-# Windows
-mvnw.cmd spring-boot:run
+# Windows (PowerShell hoặc CMD)
+./mvnw.cmd spring-boot:run
 
 # Linux/macOS
 ./mvnw spring-boot:run

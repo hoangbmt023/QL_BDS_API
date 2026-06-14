@@ -194,7 +194,6 @@ Authorization: Bearer <access_token>
     "email": "user@example.com",
     "fullName": "Nguyễn Văn A",
     "phone": "0912345678",
-    "avatar": "https://...",
     "role": "USER",
     "createdAt": "2024-01-15T10:30:00Z"
   }
@@ -211,7 +210,6 @@ Content-Type: application/json
 {
   "fullName": "Nguyễn Văn A Updated",
   "phone": "0987654321",
-  "avatar": "https://..."
 }
 ```
 
@@ -240,7 +238,6 @@ Authorization: Bearer <access_token>
       "id": 1,
       "fullName": "Nguyễn Văn A",
       "email": "user@example.com",
-      "avatar": "https://..."
     }
   ],
   "pagination": {
@@ -479,13 +476,12 @@ GET /api/properties/{slug}
       "id": 1,
       "fullName": "Chủ nhà",
       "phone": "0912345678",
-      "avatar": "https://..."
     },
     "images": [
       {
         "id": 1,
         "imageUrl": "https://...",
-        "isPrimary": true
+        "isMain": true
       }
     ],
     "createdAt": "2024-01-15T10:30:00Z"
@@ -556,7 +552,7 @@ files: [file1.jpg, file2.jpg, ...]
     {
       "id": 1,
       "imageUrl": "https://cloudinary.com/...",
-      "isPrimary": false
+      "isMain": false
     }
   ]
 }
