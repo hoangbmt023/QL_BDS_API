@@ -2,7 +2,6 @@ package com.example.qlbds.auth_service.service.impl;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -77,14 +76,15 @@ class AuthServiceImplTest {
                 .isActive(true)
                 .isDeleted(false)
                 .build();
-                
+
         mockUserDetails = mock(UserDetails.class);
     }
 
     // --- register ---
     @Test
     void register_Success() {
-        RegisterRequest request = new RegisterRequest("newuser", "new@example.com", "password", "New User", "0123456789");
+        RegisterRequest request = new RegisterRequest("newuser", "new@example.com", "password", "New User",
+                "0123456789");
         when(userRepository.existsByUsername(request.username())).thenReturn(false);
         when(userRepository.existsByEmail(request.email())).thenReturn(false);
         when(passwordEncoder.encode(request.password())).thenReturn("encoded_pwd");
@@ -96,7 +96,8 @@ class AuthServiceImplTest {
 
     @Test
     void register_ThrowsWhenUsernameExists() {
-        RegisterRequest request = new RegisterRequest("newuser", "new@example.com", "password", "New User", "0123456789");
+        RegisterRequest request = new RegisterRequest("newuser", "new@example.com", "password", "New User",
+                "0123456789");
         when(userRepository.existsByUsername(request.username())).thenReturn(true);
 
         assertThrows(DuplicateResourceException.class, () -> authService.register(request));
@@ -105,7 +106,8 @@ class AuthServiceImplTest {
 
     @Test
     void register_ThrowsWhenEmailExists() {
-        RegisterRequest request = new RegisterRequest("newuser", "new@example.com", "password", "New User", "0123456789");
+        RegisterRequest request = new RegisterRequest("newuser", "new@example.com", "password", "New User",
+                "0123456789");
         when(userRepository.existsByUsername(request.username())).thenReturn(false);
         when(userRepository.existsByEmail(request.email())).thenReturn(true);
 
@@ -120,7 +122,8 @@ class AuthServiceImplTest {
         when(userRepository.findByUsername(request.username())).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(request.password(), mockUser.getPassword())).thenReturn(true);
         when(customUserDetailsService.loadUserByUsername(request.username())).thenReturn(mockUserDetails);
-        when(jwtService.generateToken(mockUserDetails, mockUser.getEmail(), mockUser.getRole().name())).thenReturn("access_token");
+        when(jwtService.generateToken(mockUserDetails, mockUser.getEmail(), mockUser.getRole().name()))
+                .thenReturn("access_token");
         when(refreshTokenRepository.countByUser(mockUser)).thenReturn(1L);
 
         AuthResponse response = authService.login(request);
@@ -157,7 +160,7 @@ class AuthServiceImplTest {
 
         assertThrows(InvalidResourceException.class, () -> authService.login(request));
     }
-    
+
     @Test
     void login_ThrowsWhenUsernameNotFound() {
         LoginRequest request = new LoginRequest("testuser", "password");
@@ -165,14 +168,15 @@ class AuthServiceImplTest {
 
         assertThrows(ResourceNotFoundException.class, () -> authService.login(request));
     }
-    
+
     @Test
     void login_DeletesOldestRefreshTokenWhenCountExceedsLimit() {
         LoginRequest request = new LoginRequest("testuser", "password");
         when(userRepository.findByUsername(request.username())).thenReturn(Optional.of(mockUser));
         when(passwordEncoder.matches(request.password(), mockUser.getPassword())).thenReturn(true);
         when(customUserDetailsService.loadUserByUsername(request.username())).thenReturn(mockUserDetails);
-        when(jwtService.generateToken(mockUserDetails, mockUser.getEmail(), mockUser.getRole().name())).thenReturn("access_token");
+        when(jwtService.generateToken(mockUserDetails, mockUser.getEmail(), mockUser.getRole().name()))
+                .thenReturn("access_token");
         when(refreshTokenRepository.countByUser(mockUser)).thenReturn(5L);
         RefreshToken oldestToken = RefreshToken.builder().id(10L).build();
         when(refreshTokenRepository.findOldestByUserId(mockUser.getId())).thenReturn(Optional.of(oldestToken));
@@ -187,10 +191,12 @@ class AuthServiceImplTest {
     @Test
     void refreshToken_Success() {
         RefreshTokenRequest request = new RefreshTokenRequest("valid_refresh_token");
-        RefreshToken refreshToken = RefreshToken.builder().id(1L).user(mockUser).token("valid_refresh_token").expiryDate(Instant.now().plusSeconds(3600)).build();
+        RefreshToken refreshToken = RefreshToken.builder().id(1L).user(mockUser).token("valid_refresh_token")
+                .expiryDate(Instant.now().plusSeconds(3600)).build();
         when(refreshTokenRepository.findByToken(request.refreshToken())).thenReturn(Optional.of(refreshToken));
         when(customUserDetailsService.loadUserByUsername(mockUser.getUsername())).thenReturn(mockUserDetails);
-        when(jwtService.generateToken(mockUserDetails, mockUser.getEmail(), mockUser.getRole().name())).thenReturn("new_access_token");
+        when(jwtService.generateToken(mockUserDetails, mockUser.getEmail(), mockUser.getRole().name()))
+                .thenReturn("new_access_token");
 
         AuthResponse response = authService.refreshToken(request);
 
@@ -210,7 +216,8 @@ class AuthServiceImplTest {
     @Test
     void refreshToken_ThrowsWhenExpired() {
         RefreshTokenRequest request = new RefreshTokenRequest("expired_refresh_token");
-        RefreshToken refreshToken = RefreshToken.builder().id(1L).user(mockUser).token("expired_refresh_token").expiryDate(Instant.now().minusSeconds(3600)).build();
+        RefreshToken refreshToken = RefreshToken.builder().id(1L).user(mockUser).token("expired_refresh_token")
+                .expiryDate(Instant.now().minusSeconds(3600)).build();
         when(refreshTokenRepository.findByToken(request.refreshToken())).thenReturn(Optional.of(refreshToken));
 
         assertThrows(InvalidResourceException.class, () -> authService.refreshToken(request));
@@ -248,7 +255,7 @@ class AuthServiceImplTest {
 
         verify(refreshTokenRepository).deleteById(1L);
     }
-    
+
     @Test
     void logout_ThrowsWhenNotFound() {
         LogoutRequest request = new LogoutRequest("invalid_refresh_token");
@@ -352,7 +359,7 @@ class AuthServiceImplTest {
         assertEquals("new_encoded_pwd", mockUser.getPassword());
         verify(refreshTokenRepository, never()).deleteByUser(mockUser);
     }
-    
+
     @Test
     void resetPassword_SuccessLogoutAll() {
         ResetPasswordRequest request = new ResetPasswordRequest("test@example.com", "123456", "new_password", true);
@@ -377,7 +384,8 @@ class AuthServiceImplTest {
 
     @Test
     void resetPassword_ThrowsWhenEmailNotFound() {
-        ResetPasswordRequest request = new ResetPasswordRequest("notfound@example.com", "123456", "new_password", false);
+        ResetPasswordRequest request = new ResetPasswordRequest("notfound@example.com", "123456", "new_password",
+                false);
         when(userRepository.findByEmailAndIsDeletedFalse(request.email())).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> authService.resetPassword(request));
@@ -407,7 +415,7 @@ class AuthServiceImplTest {
 
         assertThrows(InvalidResourceException.class, () -> authService.generateAndSendActivateOtpEmail(request));
     }
-    
+
     @Test
     void generateAndSendActivateOtpEmail_ThrowsWhenRateLimited() {
         SendActivateOtpRequest request = new SendActivateOtpRequest("test@example.com");
@@ -483,7 +491,7 @@ class AuthServiceImplTest {
 
         assertThrows(InvalidResourceException.class, () -> authService.generateAndSendRestoreOtpEmail(request));
     }
-    
+
     @Test
     void generateAndSendRestoreOtpEmail_ThrowsWhenRateLimited() {
         SendRestoreOtpRequest request = new SendRestoreOtpRequest("test@example.com");
@@ -493,7 +501,7 @@ class AuthServiceImplTest {
 
         assertThrows(InvalidResourceException.class, () -> authService.generateAndSendRestoreOtpEmail(request));
     }
-    
+
     @Test
     void generateAndSendRestoreOtpEmail_ThrowsWhenUserNotFound() {
         SendRestoreOtpRequest request = new SendRestoreOtpRequest("test@example.com");
@@ -535,7 +543,7 @@ class AuthServiceImplTest {
 
         assertThrows(InvalidResourceException.class, () -> authService.restoreAccount(request));
     }
-    
+
     @Test
     void restoreAccount_ThrowsWhenUserNotFound() {
         RestoreAccountRequest request = new RestoreAccountRequest("test@example.com", "123456");
