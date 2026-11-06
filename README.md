@@ -1,358 +1,233 @@
+<div align="center">
 
-# Nền tảng Quản lý Bất Động Sản (Real Estate Management Platform) - Backend API
+# Real Estate Management Platform — Backend API Engine
 
-Backend API cho nền tảng quản lý bất động sản được xây dựng với **Spring Boot 4.0.6** và **Java 21**, cung cấp các dịch vụ toàn diện cho việc quản lý bất động sản, đặt lịch xem nhà, nhắn tin thời gian thực, và quản lý người dùng với các vai trò khác nhau (User, Owner, Agent, Admin).
+### Enterprise-grade Spring Boot 4 REST & WebSocket backend powering real estate listings, timeslot-aware viewing appointments, Cloudinary media pipeline, and real-time buyer-seller consultations.
 
-## 📑 Mục Lục Tài Liệu
+[![Java](https://img.shields.io/badge/Java-21%2B-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.6-6DB33F?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Flyway](https://img.shields.io/badge/Flyway-Migration%20V1--V8-CC0200?style=flat-square&logo=flyway&logoColor=white)](https://flywaydb.org/)
+[![Security](https://img.shields.io/badge/Auth-JJWT%200.12.6%20%7C%20BCrypt-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)](docs/API_GUIDE.md)
+[![WebSocket](https://img.shields.io/badge/Messaging-STOMP%20WebSocket-010101?style=flat-square&logo=socketdotio&logoColor=white)](docs/SYSTEM_DESIGN.md)
+[![Cloudinary](https://img.shields.io/badge/Media-Cloudinary%20CDN-3448C5?style=flat-square&logo=cloudinary&logoColor=white)](https://cloudinary.com/)
+[![Docker](https://img.shields.io/badge/Container-Docker%20%7C%20Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](docker-compose.yml)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
-Tài liệu chi tiết được sắp xếp trong thư mục `docs/`:
+[Quickstart](#quickstart) · [System Highlights](#system-highlights) · [System Architecture](#system-architecture) · [Documentation Hub](#documentation-hub) · [Deployment](#deployment) · [API Playground](#api-playground) · [License](#license)
 
-1. [📘 Báo Cáo Dự Án Chi Tiết](docs/project-report.md) — Tài liệu SRS, Phân tích nghiệp vụ và thiết kế hệ thống chi tiết
-2. [📘 Tài Liệu API](docs/api-document.md) — Hướng dẫn sử dụng các endpoint REST
-3. [🗄️ Thiết Kế Cơ Sở Dữ Liệu](docs/database-design.md) — Sơ đồ ERD và mô tả entities
-4. [🎯 Luồng Nghiệp Vụ](docs/user-flows.md) — Các kịch bản sử dụng (User Stories)
-5. [🧪 Kiểm Thử](docs/testing.md) — Danh sách test cases chính
-6. [🚀 Postman Collection](docs/QL_BDS.postman_collection.json) — Bộ sưu tập API Request để import và test nhanh trên Postman
+</div>
 
 ---
 
-## 🚀 Cài Đặt & Chạy Ứng Dụng
+> [!IMPORTANT]
+> **Production Runtime Notice:** The backend service requires Java 21+ and a running PostgreSQL 12+ database (provisioned automatically when using Docker Compose). Sensitive credentials including the JWT secret key (minimum 256 bits), SMTP mail credentials (for OTP emails), and Cloudinary API credentials must be configured in `.env.development` or `.env.production` before launching the application.
 
-### Yêu Cầu Hệ Thống
+---
 
-*(Lưu ý: Nếu sử dụng Docker & Docker Compose, bạn chỉ cần cài đặt Docker/Docker Compose và Git/Cloudinary Account, không cần cài đặt thủ công Java, Maven hay PostgreSQL trên máy cá nhân).*
+## System Highlights
 
-- **Java 21+** (hoặc Java 17+) — *Không cần nếu chạy bằng Docker*
-- **Apache Maven 3.8+** (Maven Wrapper đã được bao gồm) — *Không cần nếu chạy bằng Docker*
-- **PostgreSQL 12+** (Database chính) — *Không cần nếu chạy bằng Docker*
-- **Docker & Docker Compose** — *Yêu cầu bắt buộc nếu chạy bằng Docker*
-- **Cloudinary Account** (Để upload hình ảnh - tùy chọn)
-- **Git** (Để clone repository)
+| Capability | Module | Technical Description |
+| :--- | :--- | :--- |
+| **Authentication & Session Security** | `auth_service` | Dual-token authentication with stateless HMAC-SHA256 JWT Access Tokens and persistent Refresh Tokens stored in PostgreSQL. Features in-memory rate-limited OTP email verification via Thymeleaf HTML templates. |
+| **User Directory & Role Hierarchy** | `user_service` | 4-tier Role-Based Access Control (`ROLE_USER`, `ROLE_OWNER`, `ROLE_AGENT`, `ROLE_ADMIN`). Supports instantaneous self-upgrade to Owner and formal verification request review workflows for Agent candidates. |
+| **Property Listing & Media Pipeline** | `property_service` | Full property catalog management supporting multi-criteria filtering (location, price, area, bedroom/bathroom count), slug generation, similarity algorithms, view counters, and multi-image uploads to Cloudinary CDN. |
+| **Viewing Appointment Scheduler** | `viewing_service` | Automated property showing management with conflict-free daily timeslot availability checks, complete status transition engine (`PENDING`, `CONFIRMED`, `REJECTED`, `RESCHEDULED`, `COMPLETED`, `CANCELLED`). |
+| **Real-Time Property Inquiries** | `conversation_service` | Property-scoped communication channel connecting prospective buyers with owners or listing agents. Powered by WebSocket STOMP messaging, real-time presence indicators, unread badges, and message edit/recall capabilities. |
+| **Wishlist & Saved Properties** | `favorite_service` | Quick-access bookmarking engine enabling users to save properties, check bookmark status in $O(1)$ database index lookups, and perform batch removals. |
 
-### Cấu Hình Database
+---
 
-Tạo database PostgreSQL cho ứng dụng:
+## System Architecture
 
-```sql
-CREATE DATABASE bds_db;
+The platform operates an integrated Spring Boot architecture combining RESTful endpoints for transactional workflows and a WebSocket STOMP broker for real-time engagement:
+
+```mermaid
+graph TD
+    Client["Client (Web / Mobile App)"] -->|"REST HTTP Requests"| SecurityFilter["Spring Security Filter Chain (JwtAuthFilter)"]
+    Client -->|"WebSocket Handshake (/ws)"| StompBroker["WebSocket STOMP Broker (/topic, /app)"]
+    
+    SecurityFilter -->|"Validated Bearer Token"| Dispatcher["Spring MVC DispatcherServlet"]
+    
+    Dispatcher --> AuthCtrl["AuthController (/api/auth)"]
+    Dispatcher --> UserCtrl["UserController (/api/users)"]
+    Dispatcher --> PropCtrl["PropertyController (/api/properties)"]
+    Dispatcher --> ViewCtrl["ViewingController (/api/viewings)"]
+    Dispatcher --> FavCtrl["FavoriteController (/api/favorites)"]
+    Dispatcher --> ChatCtrl["ConversationController (/api/conversations)"]
+    
+    StompBroker --> ChatSubsystem["Conversation & Presence Subsystem"]
+    
+    AuthCtrl --> AuthSvc["AuthService & In-Memory OTP Store"]
+    UserCtrl --> UserSvc["UserService & RoleService"]
+    PropCtrl --> PropSvc["PropertyService & Similarity Engine"]
+    ViewCtrl --> ViewSvc["ViewingService & Timeslot Calculator"]
+    FavCtrl --> FavSvc["FavoriteService"]
+    ChatCtrl --> ChatSubsystem
+    
+    AuthSvc -->|"Send OTP Code"| MailSvc["Spring Mail & Thymeleaf Engine"]
+    PropSvc -->|"Upload & Transcode Images"| CloudinarySDK["Cloudinary CDN Storage"]
+    
+    AuthSvc --> DB[(PostgreSQL 15 & Flyway V1-V8)]
+    UserSvc --> DB
+    PropSvc --> DB
+    ViewSvc --> DB
+    FavSvc --> DB
+    ChatSubsystem --> DB
 ```
 
-### Cấu Hình Biến Môi Trường (.env)
+---
 
-Dự án bảo mật các thông tin nhạy cảm (như mật khẩu, secret key) bằng cách tách chúng ra khỏi source code. Spring Boot sẽ tự động nạp các file `.env.*` tương ứng với Profile đang chạy.
+## Quickstart
 
-**1. Cấu hình cho máy tính cá nhân (Development):**
+### Prerequisites
 
-Hãy tạo một file tên là `.env.development` ở ngay thư mục gốc của dự án (ngang hàng với `pom.xml`) với nội dung như sau:
+- **Java Development Kit (JDK)**: 21 or higher (or run entirely inside Docker)
+- **Apache Maven**: 3.8+ (Maven Wrapper `./mvnw.cmd` / `./mvnw` is included)
+- **PostgreSQL**: 12+ (or Docker Compose service)
+- **Cloudinary Account**: Cloud name, API Key, and Secret (for image uploads)
+- **SMTP Mail Provider**: Gmail App Password or standard SMTP relay (for OTP verification)
+
+### 1. Repository Setup
+
+Clone the repository and navigate into the workspace:
+
+```bash
+git clone https://github.com/hoangbmt023/qlbds.git
+cd qlbds
+```
+
+### 2. Environment Configuration
+
+Create `.env.development` in the project root directory:
 
 ```properties
-# Environment properties for Development
+# Database Configuration
 DB_URL=jdbc:postgresql://localhost:5432/bds_db
 DB_USERNAME=postgres
 DB_PASSWORD=your_postgres_password
 
+# JWT Security
 JWT_SECRET=your_very_long_secret_key_that_should_be_at_least_256_bits_long
 
+# SMTP Mail (Gmail App Password)
 MAIL_USERNAME=your_email@gmail.com
 MAIL_PASSWORD=your_app_password
 
+# Cloudinary Media Storage
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 
-# Default Admin Account
+# Default Initial Administrator
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin123
 ADMIN_EMAIL=admin@qlbds.com
 ```
 
-*(Lưu ý: Các file `.env.*` đã được cấu hình trong `.gitignore` để đảm bảo chúng sẽ không bao giờ bị đẩy lên GitHub).*
+> [!NOTE]
+> All `.env.*` files are untracked by Git to protect sensitive credentials.
 
-**2. Cấu hình cho Server (Production):**
+### 3. Execution
 
-Tương tự, tạo file `.env.production` chứa thông tin thật của Server. Để ứng dụng nạp file này, chỉ cần thêm flag `-Dspring.profiles.active=production` khi chạy.
-
-### Chạy Ứng Dụng
-
-**Phương pháp 1: Sử dụng Maven Wrapper (Khuyên dùng)**
+Launch the application using either the included Maven Wrapper or Docker:
 
 ```bash
-# Windows (PowerShell hoặc CMD)
+# Option A: Run locally using Maven Wrapper (Windows PowerShell)
 ./mvnw.cmd spring-boot:run
 
-# Linux/macOS
+# Option A: Run locally using Maven Wrapper (Linux / macOS)
 ./mvnw spring-boot:run
+
+# Option B: Run full container stack (API + PostgreSQL) via Docker Compose
+docker-compose up -d
 ```
 
-**Phương pháp 2: Build và chạy JAR**
-
-```bash
-# Build ứng dụng
-mvn clean package -DskipTests
-
-# Chạy JAR
-java -jar target/QLBDS-0.0.1-SNAPSHOT.jar
-```
-
-Ứng dụng sẽ khởi chạy trên `http://localhost:8080`
+The application starts on `http://localhost:8080`.
 
 ---
 
-## 🐳 Triển Khai (Deployment) & CI/CD
+## Documentation Hub
 
-Dự án đã được tích hợp luồng triển khai tự động (CI/CD) thông qua **GitHub Actions** và đóng gói bằng **Docker**.
+| Document | Scope | Description |
+| :--- | :--- | :--- |
+| [System Design](docs/SYSTEM_DESIGN.md) | Technical Architecture | Technical breakdown of service modules, real-time WebSocket STOMP design, ERD entity relationships, and state machine lifecycles. |
+| [Setup Guide](docs/SETUP_GUIDE.md) | Operations & Deployment | Step-by-step developer environment setup, database Flyway migrations, Cloudinary CDN configuration, and environment dictionary. |
+| [API Guide](docs/API_GUIDE.md) | Integration & Contracts | Swagger UI documentation, JWT Bearer flow, response envelopes, error handling, and complete REST endpoint catalog. |
+| [Business Flows](docs/BUSINESS_FLOWS.md) | Operational Workflows | End-to-end user journeys (Buyer discovery, appointment negotiation, property publishing, real-time inquiries, role escalation) with sequence diagrams. |
+| [Testing Guide](docs/TESTING_GUIDE.md) | Quality Assurance | Test pyramid, JUnit 5 & Mockito test suite breakdown, service coverage matrices, and execution commands. |
+| [CI/CD Guide](docs/CICD_GUIDE.md) | Automation & Release | GitHub Actions continuous integration with PostgreSQL test containers and continuous deployment Docker Hub pipelines. |
 
-### 1. Khởi chạy bằng Docker Compose
+---
 
-Bạn có thể chạy toàn bộ dự án (Bao gồm API và Database PostgreSQL) chỉ bằng một lệnh duy nhất, rất hữu ích cho quá trình triển khai production:
+## Deployment
+
+### Option 1: Docker Compose (Recommended for Production)
+
+Deploy both the backend API and PostgreSQL database with persistent storage:
 
 ```bash
-# Khởi chạy hệ thống (chạy ngầm)
+# Start all services in detached mode
 docker-compose up -d
 
-# Xem log của hệ thống
-docker-compose logs -f
+# Follow application logs
+docker-compose logs -f app
 
-# Tắt hệ thống
+# Stop the stack
 docker-compose down
 ```
 
-### 2. CI/CD Pipelines (GitHub Actions)
+### Option 2: Standalone Production JAR
 
-Dự án sử dụng 2 luồng tự động (Workflows):
-
-- **CI Pipeline (`.github/workflows/ci.yml`)**: 
-  - Tự động chạy khi có Push hoặc Pull Request vào các nhánh `develop` và `main`.
-  - Compile code, quét lỗi.
-  - Khởi tạo Database ảo (Service Container) và tự động chạy toàn bộ Unit Tests/Integration Tests.
-- **CD Pipeline (`.github/workflows/cd.yml`)**:
-  - Tự động chạy khi có code được đẩy lên (Push/Merge) nhánh `main`.
-  - Build Docker Image theo `Dockerfile` nhiều bước (Multi-stage build) để tối ưu kích thước.
-  - Tự động đẩy Image lên **Docker Hub** để sẵn sàng cho máy chủ tải về triển khai.
-
----
-
-## 🏗️ Kiến Trúc Dự Án
-
-Dự án sử dụng **Domain-Driven Design (DDD)** với các service layers tách biệt. Mỗi service có cấu trúc riêng:
-
-```
-src/main/java/com/example/qlbds/
-│
-├── auth_service/                  # 🔐 Xác thực & JWT
-│   ├── controller/
-│   ├── service/
-│   │   └── impl/
-│   ├── repository/
-│   │   └── impl/
-│   ├── entity/
-│   ├── dto/
-│   ├── mapper/
-│   └── model/
-│
-├── user_service/                  # 👥 Quản lý người dùng & vai trò
-│   ├── controller/
-│   ├── service/
-│   │   └── impl/
-│   ├── repository/
-│   ├── entity/
-│   ├── dto/
-│   └── mapper/
-│
-├── property_service/              # 🏠 Quản lý bất động sản
-│   ├── controller/
-│   ├── service/
-│   │   └── impl/
-│   ├── repository/
-│   ├── entity/
-│   ├── dto/
-│   ├── mapper/
-│   └── specification/
-│
-├── viewing_service/               # 📅 Quản lý lịch xem nhà
-│   ├── controller/
-│   ├── service/
-│   │   └── impl/
-│   ├── repository/
-│   ├── entity/
-│   ├── dto/
-│   └── mapper/
-│
-├── conversation_service/          # 💬 Chat & Tin nhắn thời gian thực
-│   ├── controller/
-│   ├── service/
-│   │   └── impl/
-│   ├── repository/
-│   ├── entity/
-│   ├── dto/
-│   ├── mapper/
-│   └── websocket/
-│
-├── favorite_service/              # ❤️ Danh sách yêu thích
-│   ├── controller/
-│   ├── service/
-│   │   └── impl/
-│   ├── repository/
-│   ├── entity/
-│   ├── dto/
-│   └── mapper/
-│
-├── common/                        # 🔧 Shared utilities
-│   ├── exception/
-│   ├── response/
-│   └── util/
-│
-├── config/                        # ⚙️ Spring Configuration
-│   ├── security/
-│   ├── SecurityConfiguration.java
-│   ├── JwtService.java
-│   ├── WebSocketConfig.java
-│   ├── CloudinaryConfig.java
-│   ├── OpenApiConfig.java
-│   └── JacksonConfig.java
-│
-├── shared/                        # 📦 Cross-service shared code
-│   ├── entity/
-│   │   └── enums/
-│   ├── dto/
-│   └── service/
-│       └── impl/
-│
-└── QlbdsApplication.java          # 🚀 Entry point
-```
-
-### Tóm Tắt Kiến Trúc
-
-**Layered Architecture:**
-```
-REST Controllers (Endpoints)
-    ↓
-Business Logic Services
-    ↓
-Repositories & Specifications (Database)
-    ↓
-PostgreSQL Database
-```
-
-**Service Standards:**
-- Mỗi service có `controller → service (impl) → repository → entity`
-- DTOs cho request/response, Mappers để convert
-- Custom repositories khi cần logic phức tạp
-
-**Shared Components:**
-- **enums**: UserRole, PropertyStatus, ViewingStatus, AgentRequestStatus
-- **services**: FileUploadService (Cloudinary), SlugService
-- **response**: ApiResponse format chuẩn
-
-**Configuration Layer:**
-- JWT & Spring Security setup
-- WebSocket configuration
-- OpenAPI/Swagger documentation
-- Cloudinary cloud storage integration
-- Custom JSON serialization
-
----
-
-## 🧪 Kiểm Thử
-
-Chạy tất cả các test:
+Package and run an optimized production executable:
 
 ```bash
-mvn test
+# Package executable JAR skipping unit tests
+./mvnw.cmd clean package -DskipTests
+
+# Launch JAR with Production profile
+java -Dspring.profiles.active=production -jar target/QLBDS-0.0.1-SNAPSHOT.jar
 ```
 
-Chạy test cho một package cụ thể:
+### Option 3: Linux VPS (Systemd Service)
+
+Create a dedicated Systemd unit file at `/etc/systemd/system/qlbds.service`:
+
+```ini
+[Unit]
+Description=QLBDS Real Estate Management Platform API
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=appuser
+WorkingDirectory=/opt/qlbds
+Environment="SPRING_PROFILES_ACTIVE=production"
+ExecStart=/usr/bin/java -jar /opt/qlbds/QLBDS-0.0.1-SNAPSHOT.jar
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Reload and activate the unit:
 
 ```bash
-mvn test -Dtest=com.example.qlbds.property_service.service.*Test
-```
-
-Chạy test với code coverage:
-
-```bash
-mvn clean test jacoco:report
+sudo systemctl daemon-reload
+sudo systemctl enable --now qlbds
 ```
 
 ---
 
-## 📚 Công Nghệ & Dependencies
+## API Playground
 
-| Công Nghệ | Phiên Bản | Mục Đích |
-|-----------|----------|---------|
-| Spring Boot | 4.0.6 | Framework chính |
-| Spring Security | 4.0.6 | Xác thực & phân quyền |
-| Spring Data JPA | 4.0.6 | Truy cập dữ liệu |
-| PostgreSQL | 42.x | Database relational |
-| Flyway | Latest | Database migrations |
-| JWT (JJWT) | 0.12.6 | Token authentication |
-| Lombok | Latest | Giảm boilerplate code |
-| MapStruct | 1.6.3 | DTO mapping |
-| Cloudinary | 1.38.0 | Cloud image storage |
-| WebSocket | 4.0.6 | Real-time messaging |
-| SpringDoc OpenAPI | 2.8.5 | Swagger/OpenAPI documentation |
-| Thymeleaf | 4.0.6 | Email templates |
+- **Swagger UI Interactive Explorer**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- **OpenAPI 3.0 Raw JSON**: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+- **Postman Collection**: Import [`docs/QL_BDS.postman_collection.json`](docs/QL_BDS.postman_collection.json) directly into Postman for comprehensive end-to-end request suites.
 
 ---
 
-## 🔐 Bảo Mật
+## License
 
-- **JWT Authentication**: Token-based stateless authentication
-- **Refresh Token**: Long-lived tokens để refresh access tokens
-- **Role-Based Access Control (RBAC)**: 4 vai trò (USER, OWNER, AGENT, ADMIN)
-- **Password Encryption**: Spring Security PasswordEncoder
-- **WebSocket Authentication**: JWT validation trên WebSocket connections
-- **CORS**: Cấu hình để cho phép requests từ các origin khác
-
----
-
-## 📖 Hướng Dẫn Phát Triển
-
-### Thêm Endpoint Mới
-
-1. Tạo controller trong service tương ứng
-2. Tạo service layer xử lý business logic
-3. Tạo repository interface nếu cần
-4. Tạo entity và DTO cho request/response
-5. Viết unit tests cho logic mới
-6. Update API documentation
-
-### Database Migrations
-
-Tạo migration file mới trong `src/main/resources/db/migration/`:
-
-```sql
--- V{number}__description.sql
--- Ví dụ: V8__add_new_column.sql
-
-ALTER TABLE users ADD COLUMN new_field VARCHAR(255);
-```
-
-Flyway sẽ tự động chạy migrations theo thứ tự version.
-
----
-
-## 🤝 Đóng Góp
-
-1. Fork repository
-2. Tạo branch feature (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Mở Pull Request
-
----
-
-## 📞 Support & Contact
-
-Nếu gặp vấn đề hoặc có câu hỏi, vui lòng tạo issue trên repository.
-
-```bash
-mvn test
-```
-
-Chi tiết về các kịch bản kiểm thử (Test Cases), vui lòng xem tại [Tài liệu Kiểm thử](docs/testing.md).
-
----
-
-## 👨‍💻 Thông tin Liên hệ
-* **Nhóm/Cá nhân thực hiện:** Huy Hoàng
-* **Đề Tài:** Xây dựng Backend API cho Nền tảng Bất động sản và Cho thuê Nhà
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for full details.
